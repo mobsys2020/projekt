@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+    <item android:id="@+id/changeSettings"
+        android:title="@string/change_settings_text">
+    </item>
+    <item android:id="@+id/neuer_Medplan"
+        android:title="@string/scan_medplan_text">
+    </item>
+</menu>
