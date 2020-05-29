@@ -20,4 +20,5 @@
     <!-- MainActivity -->
     <string name="change_settings_text">Change Settings</string>
     <string name="scan_medplan_text">Medikationsplan scannen</string>
+    <string name="neuer_medikationsplan">Neuer Medikationsplan</string>
 </resources>

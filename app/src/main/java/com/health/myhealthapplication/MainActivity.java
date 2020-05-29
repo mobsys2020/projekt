@@ -1,30 +1,37 @@
 package com.health.myhealthapplication;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Toast;
+
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.XML;
 
 /**
  * ...
  * @author Sam Wolter
  * @author Ole Hannemann
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
 ListView listView;
+Button btnNeuerPlan;
 private ArrayAdapter<String> adapter =null;
 
     @Override
@@ -32,6 +39,8 @@ private ArrayAdapter<String> adapter =null;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         listView = (ListView) findViewById(R.id.listMain);
+        btnNeuerPlan= (Button) findViewById(R.id.btnNeuerPlan);
+        btnNeuerPlan.setOnClickListener(this);
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         getItems();
     }
@@ -67,7 +76,8 @@ private ArrayAdapter<String> adapter =null;
                 startSettingsActivity();
                 return true;
             case R.id.neuer_Medplan:
-                startScanner();
+                //Über Action bar zum Scanner navigieren. Alternative
+                //startScanner();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -82,16 +92,62 @@ private ArrayAdapter<String> adapter =null;
     }
 
     private void startScanner() {
-        try {
+        scanCode();
+    }
 
-            Intent intent = new Intent("com.google.zxing.client.android.SCAN");
-            intent.putExtra("SCAN_MODE", "DATA_MATRIX"); // "PRODUCT_MODE for bar codes
+    @Override
+    public void onClick(View view) {
+        scanCode();
+    }
 
-            startActivityForResult(intent, 0);
+    private void scanCode() {
+        IntentIntegrator intentIntegrator = new IntentIntegrator(this);
+        intentIntegrator.setCaptureActivity(CaptureAct.class);
+        intentIntegrator.setOrientationLocked(false);
+        intentIntegrator.setDesiredBarcodeFormats(IntentIntegrator.DATA_MATRIX);
+        intentIntegrator.setPrompt("Scanning Code");
+        intentIntegrator.initiateScan();
+    }
 
-        } catch (Exception e) {
-            Log.i("Fehler", "startScanner: ");
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
 
+        if (result != null) {
+            if (result.getContents() != null) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Scanning result");
+                try {
+                    JSONObject jsonObject = XML.toJSONObject(result.getContents());
+                    builder.setMessage(jsonObject.toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                builder.setPositiveButton("Scan Again", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        scanCode();
+                    }
+                }).setNegativeButton("finish", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+                        finish();
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+                try {
+                    JSONObject jsonObject = XML.toJSONObject(result.getContents());
+                    Log.i("eigener Tag", "Medikationsplan in JSON: " + jsonObject.toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Toast.makeText(this, "No Result", Toast.LENGTH_SHORT).show();
+            }
+        } else{
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
