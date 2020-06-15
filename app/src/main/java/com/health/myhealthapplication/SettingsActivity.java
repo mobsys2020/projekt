@@ -54,16 +54,16 @@ public class SettingsActivity extends AppCompatActivity {
                 Calendar mcurrentTime = Calendar.getInstance();
                 int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
                 int minute = mcurrentTime.get(Calendar.MINUTE);
-                TimePickerDialog mTimePicker;
-                mTimePicker = new TimePickerDialog(SettingsActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog mTimePicker2;
+                mTimePicker2 = new TimePickerDialog(SettingsActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
                         et2.setText( ("0" + selectedHour).substring(0,2) + ":" +
                                 ("0" +selectedMinute).substring(0,2));
                     }
                 }, hour, minute, true);//Yes 24 hour time
-                mTimePicker.setTitle("Select Time");
-                mTimePicker.show();
+                mTimePicker2.setTitle("Select Time");
+                mTimePicker2.show();
 
             }
         });
@@ -76,16 +76,16 @@ public class SettingsActivity extends AppCompatActivity {
                 Calendar mcurrentTime = Calendar.getInstance();
                 int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
                 int minute = mcurrentTime.get(Calendar.MINUTE);
-                TimePickerDialog mTimePicker;
-                mTimePicker = new TimePickerDialog(SettingsActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog mTimePicker3;
+                mTimePicker3 = new TimePickerDialog(SettingsActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
                         et3.setText( ("0" + selectedHour).substring(0,2) + ":" +
                                 ("0" +selectedMinute).substring(0,2));
                     }
                 }, hour, minute, true);//Yes 24 hour time
-                mTimePicker.setTitle("Select Time");
-                mTimePicker.show();
+                mTimePicker3.setTitle("Select Time");
+                mTimePicker3.show();
 
             }
         });
@@ -98,16 +98,16 @@ public class SettingsActivity extends AppCompatActivity {
                 Calendar mcurrentTime = Calendar.getInstance();
                 int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
                 int minute = mcurrentTime.get(Calendar.MINUTE);
-                TimePickerDialog mTimePicker;
-                mTimePicker = new TimePickerDialog(SettingsActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog mTimePicker4;
+                mTimePicker4 = new TimePickerDialog(SettingsActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
                         et4.setText( ("0" + selectedHour).substring(0,2) + ":" +
                                 ("0" +selectedMinute).substring(0,2));
                     }
                 }, hour, minute, true);//Yes 24 hour time
-                mTimePicker.setTitle("Select Time");
-                mTimePicker.show();
+                mTimePicker4.setTitle("Select Time");
+                mTimePicker4.show();
 
             }
         });
