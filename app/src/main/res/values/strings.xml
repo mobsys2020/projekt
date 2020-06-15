@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">My Health Application</string>
     <string name="title_activity_settings">Settings</string>
 
@@ -21,4 +21,10 @@
     <string name="change_settings_text">Change Settings</string>
     <string name="scan_medplan_text">Medikationsplan scannen</string>
     <string name="neuer_medikationsplan">Neuer Medikationsplan</string>
+
+
+    <string name="snoozeSet_preference">
+    <xliff:g id="preference_key">enable</xliff:g> snoozeSet
+    </string>
+
 </resources>
