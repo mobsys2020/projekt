@@ -26,5 +26,6 @@
     <string name="snoozeSet_preference">
     <xliff:g id="preference_key">enable</xliff:g> snoozeSet
     </string>
+    <string name="update">Update</string>
 
 </resources>

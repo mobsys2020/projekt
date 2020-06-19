@@ -60,7 +60,7 @@ public class Alarm extends BroadcastReceiver {
     }
 
     private PendingIntent createPendingIntent(Context context) {
-        Intent intent = new Intent(context, MainActivity.class);
+        Intent intent = new Intent(context, MedplanActivity.class);
         PendingIntent pi = PendingIntent.getActivities(context, 0,
                 new Intent[]{intent},PendingIntent.
                         FLAG_UPDATE_CURRENT);

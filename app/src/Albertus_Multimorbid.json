@@ -1,0 +1,78 @@
+{
+   "MP":{
+      "v":23,
+      "U":"323031363038323831303A33353A3539",
+      "l":"de-DE",
+      "P":{
+         "g":"Albertus",
+         "f":"Multimorbid",
+         "b":"1961-12-12"
+      },
+      "A":{
+         "lanr":999999901,
+         "n":"Dr. med. Heribert Topp-Glücklich",
+         "s":"Musterstr. 1",
+         "z":64283,
+         "c":"Darmstadt",
+         "p":"06151\/1111111",
+         "e":"dr.heribert.topp-gluecklich@kbv-testpraxis.de",
+         "t":"2016-08-28"
+      },
+      "O":"",
+      "S":[
+         {
+            "M":[
+               {
+                  "p":2416383,
+                  "m":1,
+                  "du":1,
+                  "i":"bei Unterschenkelödeme 2 Tabl.",
+                  "r":"Entwässerung"
+               },
+               {
+                  "p":1937312,
+                  "h":1,
+                  "du":1,
+                  "r":"Magenschutz"
+               },
+               {
+                  "p":539354,
+                  "m":1,
+                  "v":1,
+                  "du":1,
+                  "r":"Herz, Blutdruck"
+               },
+               {
+                  "p":10321082,
+                  "m":1,
+                  "v":1,
+                  "du":1,
+                  "r":"Herzrhythmus"
+               },
+               {
+                  "p":1755752,
+                  "m":1,
+                  "du":1,
+                  "r":"Herz, Blutdruck"
+               },
+               {
+                  "p":4582140,
+                  "t":"nach Plan",
+                  "du":1,
+                  "i":"immer aktuelle Einstellung beachten",
+                  "r":"Blutverdünnung"
+               }
+            ]
+         },
+         {
+            "c":418,
+            "M":{
+               "p":4897760,
+               "m":1,
+               "du":1,
+               "r":"Knochenschutz"
+            }
+         }
+      ]
+   }
+}

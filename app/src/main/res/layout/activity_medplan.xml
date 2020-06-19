@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/relativeLayout1"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="10dp"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="10">
+        <Button
+            android:id="@+id/btnNeuerPlan"
+            android:layout_width="0dp"
+            android:layout_weight="6"
+            android:layout_height="wrap_content"
+            android:text="@string/neuer_medikationsplan">
+        </Button>
+        <Button
+            android:id="@+id/btnUpdate"
+            android:layout_width="0dp"
+            android:layout_weight="4"
+            android:layout_height="wrap_content"
+            android:text="@string/update">
+        </Button>
+    </LinearLayout>
+    <TextView
+        android:id="@+id/tvArzt"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Ausstellender Arzt:">
+    </TextView>
+    <TextView
+        android:id="@+id/tvPatient"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ausgestellt für:">
+    </TextView>
+    <ListView
+        android:id="@+id/listMain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>
