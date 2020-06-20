@@ -99,7 +99,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 update_medplan(getApplicationContext());
             }
         });
-        createAlarm();
     }
 
     /*called when user pressed back button, if the parent class of the certain activity is MedplanActivity
