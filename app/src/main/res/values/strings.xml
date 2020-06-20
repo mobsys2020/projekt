@@ -17,15 +17,28 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
 
-    <!-- MainActivity -->
+    <!-- MedplanActivity -->
     <string name="change_settings_text">Change Settings</string>
     <string name="scan_medplan_text">Medikationsplan scannen</string>
     <string name="neuer_medikationsplan">Neuer Medikationsplan</string>
-
-
-    <string name="snoozeSet_preference">
-    <xliff:g id="preference_key">enable</xliff:g> snoozeSet
-    </string>
     <string name="update">Update</string>
+
+    <!-- SettingsActivity -->
+    <string name="aendern">ändern</string>
+    <string name="default_morgens">08:00</string>
+    <string name="default_mittags">13:00</string>
+    <string name="default_abends">18:00</string>
+    <string name="default_zur_nacht">22:00</string>
+    <string name="morgens_colon">morgens:</string>
+    <string name="mittags_colon">mittags:</string>
+    <string name="abends_colon">abends:</string>
+    <string name="zur_nacht_colon">zur Nacht:</string>
+
+    <!-- MainActivity -->
+    <string name="btn_mainAct">Zum Medplan</string>
+    <string name="et_mainAct">Name</string>
+    <string name="tv_mainAct">User Access Token</string>
+    <string name="tv_arzt">Ausstellender Arzt:</string>
+    <string name="tv_patient">Ausgestellt für:</string>
 
 </resources>

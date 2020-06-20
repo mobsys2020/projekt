@@ -5,7 +5,11 @@ import com.orm.SugarRecord;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MedPlan{
+/**
+ * @author Ole Hannemann
+ * @author Sam Wolter
+ */
+public class MedPlan {
     public String patient = "";
     public String doctor = "";
     public int medcount = 0;

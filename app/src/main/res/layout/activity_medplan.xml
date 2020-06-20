@@ -31,13 +31,13 @@
         android:id="@+id/tvArzt"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="Ausstellender Arzt:">
+    android:text="@string/tv_arzt">
     </TextView>
     <TextView
         android:id="@+id/tvPatient"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ausgestellt für:">
+        android:text="@string/tv_patient">
     </TextView>
     <ListView
         android:id="@+id/listMain"

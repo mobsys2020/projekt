@@ -2,6 +2,10 @@ package com.health.myhealthapplication;
 
 import com.orm.SugarRecord;
 
+/**
+ * @author Ole Hannemann
+ * @author Sam Wolter
+ */
 public class Meds extends SugarRecord<Meds> {
     public String name = "";
     public String quantity = "";

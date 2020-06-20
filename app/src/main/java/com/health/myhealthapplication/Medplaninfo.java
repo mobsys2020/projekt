@@ -5,6 +5,10 @@ import com.orm.SugarRecord;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Ole Hannemann
+ * @author Sam Wolter
+ */
 public class Medplaninfo extends SugarRecord<Medplaninfo> {
     public String patient = "";
     public String doctor = "";

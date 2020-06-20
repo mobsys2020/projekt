@@ -8,12 +8,14 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
+/**
+ * @author Ole Hannemann
+ * @author Sam Wolter
+ */
 
 public class MedicineListAdapter extends ArrayAdapter<Meds> {
 
@@ -31,7 +33,7 @@ public class MedicineListAdapter extends ArrayAdapter<Meds> {
 
     @NonNull
     @Override
-    public View getView(int position,View convertView, ViewGroup parent){
+    public View getView(int position, View convertView, ViewGroup parent) {
         Log.i("TAG", "Adapter macht was ");
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);

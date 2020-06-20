@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -29,62 +28,62 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
-import org.xmlpull.v1.XmlSerializer;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /**
- * ...
+ * MedplanActivity shows the for the patient relevant information of the currently loaded "Medikationsplan".
+ * You can load a Medikationsplan by scanning it, update the Medikationsplan or navigate to the Settings
+ * from here.
+ *
  * @author Sam Wolter
  * @author Ole Hannemann
  */
-public class MedplanActivity extends AppCompatActivity implements View.OnClickListener{
+public class MedplanActivity extends AppCompatActivity implements View.OnClickListener {
 
-ListView listView;
-Button btnNeuerPlan, btnUpdate;
-private ArrayAdapter<String> adapter =null;
-private RequestQueue requestQueue;
+    //declarations
+    ListView listView;
+    Button btnNeuerPlan, btnUpdate;
+    private RequestQueue requestQueue;
+    MedPlan medplan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_medplan);
+        //initialize Views
         listView = (ListView) findViewById(R.id.listMain);
-        btnNeuerPlan= (Button) findViewById(R.id.btnNeuerPlan);
-        btnUpdate =(Button) findViewById(R.id.btnUpdate);
+        btnNeuerPlan = (Button) findViewById(R.id.btnNeuerPlan);
+        btnUpdate = (Button) findViewById(R.id.btnUpdate);
         btnNeuerPlan.setOnClickListener(this);
 
-        //addd back button to navigation bar
+        //add back button to navigation bar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         //get persisted medplan if it exists
-        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class,(long)1);
-        if(check != null){
+        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
+        if (check != null) {
             TextView tvarzt = findViewById(R.id.tvArzt);
             TextView tvpatient = findViewById(R.id.tvPatient);
-            tvarzt.setText("Austellender Arzt: " + Medplaninfo.findById(Medplaninfo.class,(long)1).getDoctor());
-            tvpatient.setText("Ausgestellt für: " + Medplaninfo.findById(Medplaninfo.class,(long)1).getPatient());
+            tvarzt.setText("Austellender Arzt: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getDoctor());
+            tvpatient.setText("Ausgestellt für: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getPatient());
 
             List<Meds> medlist = Meds.listAll(Meds.class);
-            Log.e("listsizeMEDS","0"+medlist.size());
+            Log.e("listsizeMEDS", "0" + medlist.size());
             MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
-            //listView.setAdapter(adapter);
-            ListView lv = findViewById(R.id.listMain);
-            lv.setAdapter(adapter);
+            listView = findViewById(R.id.listMain);
+            listView.setAdapter(adapter);
 
-        } else{
+        } else {
             //create empty list
             Medplaninfo needtoinit = new Medplaninfo();
             needtoinit.save();
@@ -93,59 +92,24 @@ private RequestQueue requestQueue;
         if (requestQueue == null) {
             requestQueue = Volley.newRequestQueue(getApplicationContext());
         }
-        //adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-        //createAlarm();
-        //getItems();
-        //Create the objects
+
         btnUpdate.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                //checks the online service for a newer Medplan
                 update_medplan(getApplicationContext());
             }
         });
+        createAlarm();
     }
 
-    /*wird beim Klick auf den Pfeil in der Action Bar in der jeweiligen Activity aufgerufen
-     * Andere Activities, die diese Methode nutzen, müssen im Manifest die MainActivity als Parent
-     * Activity angegeben haben */
+    /*called when user pressed back button, if the parent class of the certain activity is MedplanActivity
+     * (manifest)  */
     @Override
     public void onBackPressed() {
+        //intent that references this class
         Intent intent = new Intent(this, MedplanActivity.class);
-        /*Starten*/
         startActivity(intent);
     }
-
-    /*
-    TextView tvarzt = findViewById(R.id.textViewArzt);
-                        TextView tvpatient = findViewById(R.id.textViewPatient);
-                        JSONObject json = (JSONObject) response;
-                        Gson g = new Gson();
-                        MedPlan medplan = g.fromJson(json.toString(),MedPlan.class);
-                        tvarzt.setText("Austellender Arzt: " + medplan.doctor);
-                        tvpatient.setText("Ausgestellt für: " + medplan.patient);
-
-                        ListView lv = findViewById(R.id._lv);
-                        ArrayList<Meds> medlist = medplan.meds;
-                        MedsAdapter adapter = new MedsAdapter(getApplicationContext(),medlist,20);
-                        lv.setAdapter(adapter);
-     */
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        /*MedicineListAdapter adapter = new MedicineListAdapter(this, R.layout.adapter_view_layout, medsList);
-        listView.setAdapter(adapter);*/
-
-        SharedPreferences prefs = getSharedPreferences("time", MODE_PRIVATE);
-        String time_morgens = prefs.getString("time_morgens", "No time defined");
-        String time_mittags = prefs.getString("time_mittags", "No time defined");
-        String time_abends = prefs.getString("time_abends", "No time defined");
-        String time_zur_nacht = prefs.getString("time_zur_nacht", "No time defined");
-    }
-
-    /*private void createMedicinesObjects(String name, String time, String amount) {
-        //TODO: wenn "morgens", "mittags" etc. nicht 0 dann
-        medsList.add(new Medicine(name, time, amount));
-    }*/
 
 
     @Override
@@ -166,10 +130,11 @@ private RequestQueue requestQueue;
         }
     }
 
+    //checks the online service for a newer Medplan und replaces the current one with the newer one
     public void update_medplan(final Context context) {
         SharedPreferences pref = getSharedPreferences("user_key", MODE_PRIVATE);
         String url = "https://mobsysbackend.herokuapp.com/request.json";
-        //String url = "http://192.168.0.5/request/2.json";
+        //TODO queue verwenden oder löschen
         RequestQueue queue = Volley.newRequestQueue(this);
 
         Map<String, String> params = new HashMap<String, String>();
@@ -185,7 +150,7 @@ private RequestQueue requestQueue;
                         TextView tvpatient = findViewById(R.id.tvPatient);
                         JSONObject json = (JSONObject) response;
                         Gson g = new Gson();
-                        MedPlan medplan = g.fromJson(json.toString(), MedPlan.class);
+                        medplan = g.fromJson(json.toString(), MedPlan.class);
                         Log.i("JSONtoString", "onResponse: " + json.toString());
                         tvarzt.setText("Austellender Arzt: " + medplan.getDoctor());
                         tvpatient.setText("Ausgestellt für: " + medplan.getPatient());
@@ -193,13 +158,16 @@ private RequestQueue requestQueue;
                         List<Meds> medlist = medplan.meds;
                         MedicineListAdapter adapter = new MedicineListAdapter(context, R.layout.adapter_view_layout, medlist);
                         listView.setAdapter(adapter);
-
+                        for(int i=0; i<medlist.size(); i++)
+                        {
+                            //createAlarm(Meds.findById(Meds.class, (long) i));
+                        }
                         //doing some databse stuff
                         //remember record indexes start with 1
-                        Medplaninfo check =Medplaninfo.findById(Medplaninfo.class,(long)1);
+                        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
 
-                        if(check == null){
-                            Log.e("SATAN","no empty object was found somethign must have went wrong(quite badly lol)");
+                        if (check == null) {
+                            Log.e("SATAN", "no empty object was found somethign must have went wrong(quite badly lol)");
                         } else {
                             check.setDoctor(medplan.getDoctor());
                             check.setMedcount(medplan.getMedcount());
@@ -207,7 +175,7 @@ private RequestQueue requestQueue;
                             //delete old meds
                             Meds.deleteAll(Meds.class);
                             //save new meds
-                            for(Meds _med: medplan.meds){
+                            for (Meds _med : medplan.meds) {
                                 _med.save();
                             }
                             check.save();
@@ -226,36 +194,44 @@ private RequestQueue requestQueue;
         );
         requestQueue.add(jsonObjReq);
     }
+
     private void startSettingsActivity() {
-        /*Erstellen eines Intents für die SettingsActivity*/
+        //create intent for the SettingsActivity
         Intent intent = new Intent(this, SettingsActivity.class);
-        /*Starten*/
+        /*start*/
         startActivity(intent);
     }
+
+    //creates the alarm
+    //TODO
     public void createAlarm() {
 //Manager abrufen
-        Log.i("TAG", "createAlarm: ");
+        Log.i("Alarm", "createAlarm: ");
         AlarmManager mng = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 //Action zur Ausführung festlegen
         Intent intent = new Intent(this, Alarm.class);
 //PendingIntent erstellen
         PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-//Alarm setzen
-        Calendar cal=Calendar.getInstance();
-        /*TimePicker timePicker = (TimePicker) findViewById(R.id.timePicker);
-        cal.set(Calendar.HOUR_OF_DAY, timePicker.getCurrentHour());
-        cal.set(Calendar.MINUTE, timePicker.getCurrentMinute());
+        //List<Meds> medlist = medplan.meds;
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        cal.set(Calendar.HOUR_OF_DAY, 1);
+        cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        Log.i("TAG", "createAlarm: " +cal.getTimeInMillis());*/
-        long currentT = cal.getTimeInMillis() +10000;
-        //mng.setRepeating(AlarmManager.RTC_WAKEUP,  currentT, 86400000, pi);
+        Log.i("Millesekunden", "createAlarm: " +cal.getTimeInMillis());
+        //SharedPrefs zur Umwandlung in Uhrzeit
+        SharedPreferences prefs = getSharedPreferences("time", MODE_PRIVATE);
+        String time_morgens = prefs.getString("time_morgens", "No time defined");
+        String time_mittags = prefs.getString("time_mittags", "No time defined");
+        String time_abends = prefs.getString("time_abends", "No time defined");
+        String time_zur_nacht = prefs.getString("time_zur_nacht", "No time defined");
+        System.currentTimeMillis();
+        long waitingInMillis = cal.getTimeInMillis() - System.currentTimeMillis();;
+        mng.setRepeating(AlarmManager.RTC_WAKEUP,  waitingInMillis, 86400000, pi);
     }
 
-    private void startScanner() {
-        scanCode();
-    }
 
     @Override
     public void onClick(View view) {
@@ -287,70 +263,69 @@ private RequestQueue requestQueue;
                     String medplan_string = result.getContents();
 
                     //check if the result contains xml stuff
-                    if(medplan_string.contains("<MP")){
+                    if (medplan_string.contains("<MP")) {
                         //get Patientname
-                        String vorname = medplan_string.substring(medplan_string.indexOf("g=")+3,medplan_string.indexOf("\" f=\""));
-                        String nachname = medplan_string.substring(medplan_string.indexOf("f=")+3,medplan_string.indexOf("\" b=\""));
+                        String vorname = medplan_string.substring(medplan_string.indexOf("g=") + 3, medplan_string.indexOf("\" f=\""));
+                        String nachname = medplan_string.substring(medplan_string.indexOf("f=") + 3, medplan_string.indexOf("\" b=\""));
                         //get Doctorname
-                        String doctor = medplan_string.substring(medplan_string.indexOf("A n=")+5,medplan_string.indexOf("\" s=\""));
-                        Log.e("test123", vorname + " " +nachname + " - " + doctor);
+                        String doctor = medplan_string.substring(medplan_string.indexOf("A n=") + 5, medplan_string.indexOf("\" s=\""));
+                        Log.e("test123", vorname + " " + nachname + " - " + doctor);
 
 
                         //replace mednames since we dont have the db for them
 
-                        medplan_string = medplan_string.replace("230272","Metoprolol succinat");
-                        medplan_string = medplan_string.replace("2223945","Ramipril");
-                        medplan_string = medplan_string.replace("558736","Insulin aspart");
-                        medplan_string = medplan_string.replace("9900751","Simvastatim");
-                        medplan_string = medplan_string.replace("2239828","Fentanyl");
-                        medplan_string = medplan_string.replace("2455874","Johanniskrat Trockenextrakt");
+                        medplan_string = medplan_string.replace("230272", "Metoprolol succinat");
+                        medplan_string = medplan_string.replace("2223945", "Ramipril");
+                        medplan_string = medplan_string.replace("558736", "Insulin aspart");
+                        medplan_string = medplan_string.replace("9900751", "Simvastatim");
+                        medplan_string = medplan_string.replace("2239828", "Fentanyl");
+                        medplan_string = medplan_string.replace("2455874", "Johanniskrat Trockenextrakt");
 
                         //time to get all meds
                         StringBuffer workingcopy = new StringBuffer(medplan_string);
-                        workingcopy.replace(0,medplan_string.indexOf("<S")-1,"");
-                        String medstring1 = workingcopy.substring(workingcopy.indexOf("<S>"),workingcopy.indexOf("</S>")+4);
+                        workingcopy.replace(0, medplan_string.indexOf("<S") - 1, "");
+                        String medstring1 = workingcopy.substring(workingcopy.indexOf("<S>"), workingcopy.indexOf("</S>") + 4);
                         //remove first medstring
-                        workingcopy.replace(workingcopy.indexOf("<S>"),workingcopy.indexOf("</S>")+4,"");
+                        workingcopy.replace(workingcopy.indexOf("<S>"), workingcopy.indexOf("</S>") + 4, "");
                         //remove first medstring <S> tags
-                        medstring1 = medstring1.replace("<S>","");
-                        medstring1 = medstring1.replace("</S>","");
+                        medstring1 = medstring1.replace("<S>", "");
+                        medstring1 = medstring1.replace("</S>", "");
 
                         //get second medstring
-                        String medstring2 = workingcopy.toString().substring(workingcopy.indexOf("<S"),workingcopy.indexOf("</S>")+4);
+                        String medstring2 = workingcopy.toString().substring(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4);
                         //remove second medstring
-                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"),workingcopy.indexOf("</S>")+4," ");
-                        medstring2 = medstring2.replace("<S t=\"zu besonderen Zeiten anzuwendende Medikamente\">"," ");
-                        medstring2 = medstring2.replace("</S>"," ");
+                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4, " ");
+                        medstring2 = medstring2.replace("<S t=\"zu besonderen Zeiten anzuwendende Medikamente\">", " ");
+                        medstring2 = medstring2.replace("</S>", " ");
 
                         //get third medstring
-                        String medstring3 = workingcopy.toString().substring(workingcopy.indexOf("\">"),workingcopy.indexOf("</S>")+4);
+                        String medstring3 = workingcopy.toString().substring(workingcopy.indexOf("\">"), workingcopy.indexOf("</S>") + 4);
                         //remove second medstring
-                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"),workingcopy.indexOf("</S>")+4," ");
-                        medstring3 = medstring3.replace("\">"," ");
-                        medstring3 = medstring3.replace("</S>"," ");
+                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4, " ");
+                        medstring3 = medstring3.replace("\">", " ");
+                        medstring3 = medstring3.replace("</S>", " ");
 
-                        Log.e("SATAN","\n"+medstring1+"\n"+medstring2+"\n"+medstring3);
+                        Log.e("SATAN", "\n" + medstring1 + "\n" + medstring2 + "\n" + medstring3);
 
-                        String meds_bmp = medstring1+medstring2+medstring3;
+                        String meds_bmp = medstring1 + medstring2 + medstring3;
 
                         Gson g2 = new Gson();
 
 
-                        bmpmeds meds =  g2.fromJson(XML.toJSONObject(meds_bmp).toString(),bmpmeds.class);
-                                //(JsonObject) XML.toJSONObject(meds_bmp);
-                        Log.e("Satan", ""+meds.M.size());
+                        bmpmeds meds = g2.fromJson(XML.toJSONObject(meds_bmp).toString(), bmpmeds.class);
+                        //(JsonObject) XML.toJSONObject(meds_bmp);
+                        Log.e("Satan", "" + meds.M.size());
 
-                        for(bmpmed m: meds.M){
+                        for (bmpmed m : meds.M) {
                             //check if dosage is part of our enum class
-                            if (m.du.charAt(0) >='a' && m.du.charAt(0) <='v'){
-                            } else{
+                            if (m.du.charAt(0) >= 'a' && m.du.charAt(0) <= 'v') {
+                            } else {
                                 //add z infornt so we can get the dosage out of our enum
-                                m.du = "z"+m.du;
+                                m.du = "z" + m.du;
                             }
                             String quantity_mod = enum_dosierung.valueOf(m.du).get_name();
                             Log.e("Satan", quantity_mod);
                         }
-
 
 
                     }
@@ -396,31 +371,10 @@ private RequestQueue requestQueue;
             } else {
                 Toast.makeText(this, "No Result", Toast.LENGTH_SHORT).show();
             }
-        } else{
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
-    //Realisierung der Textgröße der List View Items
-    /*public void adjustTextSize() {
-        adapter = new ArrayAdapter<String>
-                (this, android.R.layout.simple_list_item_1) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                // Item aus der List View erhalten
-                View view = super.getView(position, convertView, parent);
-
-                TextView tv = (TextView) view.findViewById(android.R.id.text1);
-
-                //Schriftgöße auf Wert aus den Shared Preferences (Settings Activity) setzen
-                SharedPreferences prefs = getSharedPreferences(getString(R.string.txtSize_preference), MODE_PRIVATE);
-                String size = prefs.getString(getString(R.string.txtSize_preference), "25");
-                tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, Integer.parseInt(size));
-
-                return view;
-            }
-        };
-        listView.setAdapter(adapter);
-    }*/
 }
 
