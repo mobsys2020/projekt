@@ -29,12 +29,14 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -283,6 +285,66 @@ private RequestQueue requestQueue;
                     Log.i("als String", "onActivityResult: " + result.getContents().toString());
                     //JSONObject jsonObject = XML.toJSONObject(result.getContents());
                     String medplan_string = result.getContents();
+
+                    //check if the result contains xml stuff
+                    if(medplan_string.contains("<MP")){
+                        //get Patientname
+                        String vorname = medplan_string.substring(medplan_string.indexOf("g=")+3,medplan_string.indexOf("\" f=\""));
+                        String nachname = medplan_string.substring(medplan_string.indexOf("f=")+3,medplan_string.indexOf("\" b=\""));
+                        //get Doctorname
+                        String doctor = medplan_string.substring(medplan_string.indexOf("A n=")+5,medplan_string.indexOf("\" s=\""));
+                        Log.e("test123", vorname + " " +nachname + " - " + doctor);
+
+
+                        //replace mednames since we dont have the db for them
+
+                        medplan_string = medplan_string.replace("230272","Metoprolol succinat");
+                        medplan_string = medplan_string.replace("2223945","Ramipril");
+                        medplan_string = medplan_string.replace("558736","Insulin aspart");
+                        medplan_string = medplan_string.replace("9900751","Simvastatim");
+                        medplan_string = medplan_string.replace("2239828","Fentanyl");
+                        medplan_string = medplan_string.replace("2455874","Johanniskrat Trockenextrakt");
+
+                        //time to get all meds
+                        StringBuffer workingcopy = new StringBuffer(medplan_string);
+                        workingcopy.replace(0,medplan_string.indexOf("<S")-1,"");
+                        String medstring1 = workingcopy.substring(workingcopy.indexOf("<S>"),workingcopy.indexOf("</S>")+4);
+                        //remove first medstring
+                        workingcopy.replace(workingcopy.indexOf("<S>"),workingcopy.indexOf("</S>")+4,"");
+                        //remove first medstring <S> tags
+                        medstring1 = medstring1.replace("<S>","");
+                        medstring1 = medstring1.replace("</S>","");
+
+                        //get second medstring
+                        String medstring2 = workingcopy.toString().substring(workingcopy.indexOf("<S"),workingcopy.indexOf("</S>")+4);
+                        //remove second medstring
+                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"),workingcopy.indexOf("</S>")+4," ");
+                        medstring2 = medstring2.replace("<S t=\"zu besonderen Zeiten anzuwendende Medikamente\">"," ");
+                        medstring2 = medstring2.replace("</S>"," ");
+
+                        //get third medstring
+                        String medstring3 = workingcopy.toString().substring(workingcopy.indexOf("\">"),workingcopy.indexOf("</S>")+4);
+                        //remove second medstring
+                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"),workingcopy.indexOf("</S>")+4," ");
+                        medstring3 = medstring3.replace("\">"," ");
+                        medstring3 = medstring3.replace("</S>"," ");
+
+                        Log.e("SATAN","\n"+medstring1+"\n"+medstring2+"\n"+medstring3);
+
+                        String meds_bmp = medstring1+medstring2+medstring3;
+
+                        Gson g2 = new Gson();
+
+
+                        bmpmeds meds =  g2.fromJson(XML.toJSONObject(meds_bmp).toString(),bmpmeds.class);
+                                //(JsonObject) XML.toJSONObject(meds_bmp);
+                        Log.e("Satan", ""+meds.M.size());
+
+
+
+                    }
+
+
                     Gson g = new Gson();
                     MedPlan medplan = g.fromJson(medplan_string, MedPlan.class);
                     Log.i("Gson to String", "onActivityResult: " + g.toString());
@@ -293,6 +355,10 @@ private RequestQueue requestQueue;
                     MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
                     listView.setAdapter(adapter);
                     builder.setMessage("Medikationsplan erfasst");
+
+                    //TODO persistency
+
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
