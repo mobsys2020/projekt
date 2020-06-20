@@ -5,20 +5,18 @@ import com.orm.SugarRecord;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MedPlan{
+public class Medplaninfo extends SugarRecord<Medplaninfo> {
     public String patient = "";
     public String doctor = "";
     public int medcount = 0;
-    public List<Meds> meds = new ArrayList<Meds>();
 
-    public MedPlan() {
+    public Medplaninfo() {
     }
 
-    public MedPlan(String patient, String doctor, int medcount, ArrayList<Meds> meds) {
+    public Medplaninfo(String patient, String doctor, int medcount) {
         this.patient = patient;
         this.doctor = doctor;
         this.medcount = medcount;
-        this.meds = meds;
     }
 
     public String getPatient() {
@@ -43,13 +41,5 @@ public class MedPlan{
 
     public void setMedcount(int medcount) {
         this.medcount = medcount;
-    }
-
-    public List<Meds> getMeds() {
-        return meds;
-    }
-
-    public void setMeds(ArrayList<Meds> meds) {
-        this.meds = meds;
     }
 }

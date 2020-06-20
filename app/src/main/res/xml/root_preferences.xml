@@ -1,25 +1,10 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="@string/messages_header">
+    <PreferenceCategory app:title="times">
 
         <Preference
-            app:key="morgens"
+            app:key="time"
             app:title="titel_morgens"
-            >
-        </Preference>
-        <Preference
-            app:key="mittags"
-            app:title="titel_mittags"
-            >
-        </Preference>
-        <Preference
-            app:key="abends"
-            app:title="titel_abends"
-            >
-        </Preference>
-        <Preference
-            app:key="zur_nacht"
-            app:title="titel_zur_nacht"
             >
         </Preference>
 

@@ -21,17 +21,20 @@
         <activity
             android:name=".SettingsActivity"
             android:parentActivityName=".MedplanActivity" />
-        <activity android:name=".MedplanActivity">
+
+        <activity android:name=".MedplanActivity"
+            android:parentActivityName=".MainActivity" >
         </activity>
         <activity
             android:name=".CaptureAct"
             android:screenOrientation="fullSensor"
             android:stateNotNeeded="true"
-            android:windowSoftInputMode="stateAlwaysHidden" />
+            android:windowSoftInputMode="stateAlwaysHidden"
+            />
 
         <meta-data
             android:name="DATABASE"
-            android:value="sugar_example.db" />
+            android:value="sugar_db.db" />
         <meta-data
             android:name="VERSION"
             android:value="1" />
@@ -40,7 +43,7 @@
             android:value="true" />
         <meta-data
             android:name="DOMAIN_PACKAGE_NAME"
-            android:value="com.example" />
+            android:value="com.health" />
 
         <receiver android:name=".Alarm" />
     </application>

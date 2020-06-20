@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,10 +19,10 @@ public class MedicineListAdapter extends ArrayAdapter<Meds> {
 
     private Context mContext;
     int mResource;
-    private ArrayList<Meds> medlist;
+    private List<Meds> medlist;
 
 
-    public MedicineListAdapter(Context context, int resource, ArrayList<Meds> objects) {
+    public MedicineListAdapter(Context context, int resource, List<Meds> objects) {
         super(context, resource, objects);
         mContext = context;
         medlist = objects;

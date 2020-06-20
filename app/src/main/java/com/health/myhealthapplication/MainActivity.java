@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 
 import java.util.Random;
 
@@ -32,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.i("UAT", "onCreate: " + pref.getString("user_key",""));
 
-        /*EditText uat = findViewById(R.id.uat);
-        uat.setText(pref.getString("user_key",""));*/
+        EditText uat = findViewById(R.id.uat);
+        uat.setText(pref.getString("user_key",""));
 
 
     }

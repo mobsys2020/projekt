@@ -3,6 +3,7 @@ package com.health.myhealthapplication;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActionBar;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -38,6 +39,7 @@ import org.json.XML;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -51,7 +53,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 ListView listView;
 Button btnNeuerPlan, btnUpdate;
 private ArrayAdapter<String> adapter =null;
-ArrayList<Meds> medsList = new ArrayList<>();
 private RequestQueue requestQueue;
 
     @Override
@@ -63,6 +64,30 @@ private RequestQueue requestQueue;
         btnUpdate =(Button) findViewById(R.id.btnUpdate);
         btnNeuerPlan.setOnClickListener(this);
 
+        //addd back button to navigation bar
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        //get persisted medplan if it exists
+        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class,(long)1);
+        if(check != null){
+            TextView tvarzt = findViewById(R.id.tvArzt);
+            TextView tvpatient = findViewById(R.id.tvPatient);
+            tvarzt.setText("Austellender Arzt: " + Medplaninfo.findById(Medplaninfo.class,(long)1).getDoctor());
+            tvpatient.setText("Ausgestellt für: " + Medplaninfo.findById(Medplaninfo.class,(long)1).getPatient());
+
+            List<Meds> medlist = Meds.listAll(Meds.class);
+            Log.e("listsizeMEDS","0"+medlist.size());
+            MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
+            //listView.setAdapter(adapter);
+            ListView lv = findViewById(R.id.listMain);
+            lv.setAdapter(adapter);
+
+        } else{
+            //create empty list
+            Medplaninfo needtoinit = new Medplaninfo();
+            needtoinit.save();
+        }
+
         if (requestQueue == null) {
             requestQueue = Volley.newRequestQueue(getApplicationContext());
         }
@@ -70,8 +95,6 @@ private RequestQueue requestQueue;
         //createAlarm();
         //getItems();
         //Create the objects
-        MedicineListAdapter adapter = new MedicineListAdapter(this, R.layout.adapter_view_layout, medsList);
-        listView.setAdapter(adapter);
         btnUpdate.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 update_medplan(getApplicationContext());
@@ -107,19 +130,14 @@ private RequestQueue requestQueue;
     protected void onResume() {
         super.onResume();
 
-
-
         /*MedicineListAdapter adapter = new MedicineListAdapter(this, R.layout.adapter_view_layout, medsList);
         listView.setAdapter(adapter);*/
 
-        SharedPreferences prefs = getSharedPreferences("morgens", MODE_PRIVATE);
-        String name = prefs.getString("time", "No name defined");//"No name defined" is the default value.
-        SharedPreferences prefs2 = getSharedPreferences("mittags", MODE_PRIVATE);
-        String name2 = prefs.getString("time", "No name defined");//"No name defined" is the default value.
-        SharedPreferences prefs3 = getSharedPreferences("abends", MODE_PRIVATE);
-        String name3 = prefs.getString("time", "No name defined");//"No name defined" is the default value.
-        SharedPreferences prefs4 = getSharedPreferences("zur_nacht", MODE_PRIVATE);
-        String name4 = prefs.getString("time", "No name defined");//"No name defined" is the default value.
+        SharedPreferences prefs = getSharedPreferences("time", MODE_PRIVATE);
+        String time_morgens = prefs.getString("time_morgens", "No time defined");
+        String time_mittags = prefs.getString("time_mittags", "No time defined");
+        String time_abends = prefs.getString("time_abends", "No time defined");
+        String time_zur_nacht = prefs.getString("time_zur_nacht", "No time defined");
     }
 
     /*private void createMedicinesObjects(String name, String time, String amount) {
@@ -167,12 +185,31 @@ private RequestQueue requestQueue;
                         Gson g = new Gson();
                         MedPlan medplan = g.fromJson(json.toString(), MedPlan.class);
                         Log.i("JSONtoString", "onResponse: " + json.toString());
-                        tvarzt.setText("Austellender Arzt: " + medplan.doctor);
-                        tvpatient.setText("Ausgestellt für: " + medplan.patient);
+                        tvarzt.setText("Austellender Arzt: " + medplan.getDoctor());
+                        tvpatient.setText("Ausgestellt für: " + medplan.getPatient());
 
-                        ArrayList<Meds> medlist = medplan.meds;
+                        List<Meds> medlist = medplan.meds;
                         MedicineListAdapter adapter = new MedicineListAdapter(context, R.layout.adapter_view_layout, medlist);
                         listView.setAdapter(adapter);
+
+                        //doing some databse stuff
+                        //remember record indexes start with 1
+                        Medplaninfo check =Medplaninfo.findById(Medplaninfo.class,(long)1);
+
+                        if(check == null){
+                            Log.e("SATAN","no empty object was found somethign must have went wrong(quite badly lol)");
+                        } else {
+                            check.setDoctor(medplan.getDoctor());
+                            check.setMedcount(medplan.getMedcount());
+                            check.setPatient(medplan.getPatient());
+                            //delete old meds
+                            Meds.deleteAll(Meds.class);
+                            //save new meds
+                            for(Meds _med: medplan.meds){
+                                _med.save();
+                            }
+                            check.save();
+                        }
 
                     }
                 },
@@ -180,7 +217,7 @@ private RequestQueue requestQueue;
                     @Override
                     public void onErrorResponse(VolleyError error) {
 
-                        Log.i("TAG", "onErrorResponse: ");
+                        Log.i("TAG", "onErrorResponse: Something went wrong when updateing <.<");
 
                     }
                 }
@@ -252,7 +289,7 @@ private RequestQueue requestQueue;
                     tvarzt.setText("Austellender Arzt: " + medplan.doctor);
                     tvpatient.setText("Ausgestellt für: " + medplan.patient);
                     //Log.i("TAG", "onActivityResult: " + jsonObject.toString());
-                    ArrayList<Meds> medlist = medplan.meds;
+                    List<Meds> medlist = medplan.meds;
                     MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
                     listView.setAdapter(adapter);
                     builder.setMessage("Medikationsplan erfasst");

@@ -133,35 +133,26 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
 
-        SharedPreferences.Editor editor = getSharedPreferences("morgens", MODE_PRIVATE).edit();
-        editor.putString("time", String.valueOf(tv1.getText()));
+        SharedPreferences.Editor editor = getSharedPreferences("time", MODE_PRIVATE).edit();
+        editor.putString("time_morgens", String.valueOf(tv1.getText()));
+        editor.putString("time_mittags", String.valueOf(tv2.getText()));
+        editor.putString("time_abends", String.valueOf(tv3.getText()));
+        editor.putString("time_zur_nacht", String.valueOf(tv4.getText()));
         editor.apply();
-        SharedPreferences.Editor editor2 = getSharedPreferences("mittags", MODE_PRIVATE).edit();
-        editor2.putString("time", String.valueOf(tv2.getText()));
-        editor2.apply();
-        SharedPreferences.Editor editor3 = getSharedPreferences("abends", MODE_PRIVATE).edit();
-        editor3.putString("time", String.valueOf(tv3.getText()));
-        editor3.apply();
-        SharedPreferences.Editor editor4 = getSharedPreferences("zur_nacht", MODE_PRIVATE).edit();
-        editor4.putString("time", String.valueOf(tv4.getText()));
-        editor4.apply();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        SharedPreferences prefs = getSharedPreferences("morgens", MODE_PRIVATE);
-        String time_morgens = prefs.getString("time", "No time defined");//"No name defined" is the default value.
+        SharedPreferences prefs = getSharedPreferences("time", MODE_PRIVATE);
+        String time_morgens = prefs.getString("time_morens", "No time defined");
         tv1.setText(time_morgens);
-        SharedPreferences prefs2 = getSharedPreferences("mittags", MODE_PRIVATE);
-        String time_mittags = prefs2.getString("time", "No time defined");//"No name defined" is the default value.
+        String time_mittags = prefs.getString("time_mittags", "No time defined");
         tv2.setText(time_mittags);
-        SharedPreferences prefs3 = getSharedPreferences("abends", MODE_PRIVATE);
-        String time_abends = prefs3.getString("time", "No time defined");//"No name defined" is the default value.
+        String time_abends = prefs.getString("time_abends", "No time defined");
         tv3.setText(time_abends);
-        SharedPreferences prefs4 = getSharedPreferences("zur_nacht", MODE_PRIVATE);
-        String time_zur_nacht = prefs4.getString("time", "No time defined");//"No name defined" is the default value.
+        String time_zur_nacht = prefs.getString("time_zur_nacht", "No time defined");
         tv4.setText(time_zur_nacht);
     }
 
