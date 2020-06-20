@@ -340,6 +340,17 @@ private RequestQueue requestQueue;
                                 //(JsonObject) XML.toJSONObject(meds_bmp);
                         Log.e("Satan", ""+meds.M.size());
 
+                        for(bmpmed m: meds.M){
+                            //check if dosage is part of our enum class
+                            if (m.du.charAt(0) >='a' && m.du.charAt(0) <='v'){
+                            } else{
+                                //add z infornt so we can get the dosage out of our enum
+                                m.du = "z"+m.du;
+                            }
+                            String quantity_mod = enum_dosierung.valueOf(m.du).get_name();
+                            Log.e("Satan", quantity_mod);
+                        }
+
 
 
                     }
