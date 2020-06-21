@@ -284,7 +284,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         medplan_string = medplan_string.replace("558736", "Insulin aspart");
                         medplan_string = medplan_string.replace("9900751", "Simvastatim");
                         medplan_string = medplan_string.replace("2239828", "Fentanyl");
-                        medplan_string = medplan_string.replace("2455874", "Johanniskrat Trockenextrakt");
+                        medplan_string = medplan_string.replace("2455874", "Johanniskraut Trockenextrakt");
 
                         //time to get all meds
                         StringBuffer workingcopy = new StringBuffer(medplan_string);
@@ -384,7 +384,8 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                                 med_buffer = new Meds();
                                 med_buffer.setName(m.p);
                                 med_buffer.setTime("Mittags");
-                                med_buffer.setDays(m.t);
+                                //med_buffer.setDays(m.t);
+                                med_buffer.setQuantity(m.t +" "+quantity_mod);
                                 medlist.add(med_buffer);
                             }
 
