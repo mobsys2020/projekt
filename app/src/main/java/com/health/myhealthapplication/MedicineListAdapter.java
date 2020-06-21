@@ -13,6 +13,9 @@ import java.util.List;
 import androidx.annotation.NonNull;
 
 /**
+ * MedicineListAdapter contains all Meds and exists for handing over them to the ListView of the
+ * MedplanActivity
+ *
  * @author Ole Hannemann
  * @author Sam Wolter
  */
@@ -34,7 +37,7 @@ public class MedicineListAdapter extends ArrayAdapter<Meds> {
     @NonNull
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Log.i("TAG", "Adapter macht was ");
+
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);
         Meds med = medlist.get(position);

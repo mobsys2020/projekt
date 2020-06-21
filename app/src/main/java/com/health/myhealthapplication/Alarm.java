@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 
@@ -21,24 +22,29 @@ public class Alarm extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        createSimpleNotification(context);
+
+        Bundle extras =intent.getExtras();
+
+        createSimpleNotification(context, extras.getLong("med_id"));
         Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
 // Vibrate for 3000 milliseconds
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+            v.vibrate(VibrationEffect.createOneShot(1500, VibrationEffect.DEFAULT_AMPLITUDE));
         } else {
             //deprecated in API 26
-            v.vibrate(500);
+            v.vibrate(1500);
         }
     }
 
-    private void createSimpleNotification(Context context) {
+    private void createSimpleNotification(Context context, long id) {
+
+        Meds meds=Meds.findById(Meds.class, id);
 //create notification builder
         Notification.Builder builder = new Notification.Builder((context));
 //properties
 
-        builder.setContentTitle("Erinnerung an eine Medikation")
-                .setContentText("bitte ... einnehmen")
+        builder.setContentTitle("Erinnerung an eine Einnahme")
+                .setContentText("Es ist Zeit " +meds.getQuantity() +" "+ meds.getName() + " einzunehmen!")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(createPendingIntent(context))
                 .setAutoCancel(true)

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="margin_top_layout_settings_activity">15dp</dimen>
+    <dimen name="margin_top_uat_settings_activity">40dp</dimen>
+    <dimen name="margins_button_main_activity">16dp</dimen>
+    <dimen name="margin_top_et_main_activity">15dp</dimen>
+    <dimen name="margin_top_tv_main_activity">8dp</dimen>
+    <dimen name="padding_layout_medplan_activity">10dp</dimen>
+</resources>

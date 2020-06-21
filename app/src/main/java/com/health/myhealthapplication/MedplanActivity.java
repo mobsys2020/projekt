@@ -1,11 +1,8 @@
 package com.health.myhealthapplication;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ActionBar;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -39,11 +36,8 @@ import org.json.XML;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 /**
@@ -58,9 +52,15 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
     //declarations
     ListView listView;
+    TextView tvarzt, tvpatient;
     Button btnNeuerPlan, btnUpdate;
     private RequestQueue requestQueue;
     MedPlan medplan;
+    SharedPreferences time_prefs;
+    String time_morgens;
+    String time_mittags;
+    String time_abends;
+    String time_zur_nacht;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +71,14 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         btnNeuerPlan = (Button) findViewById(R.id.btnNeuerPlan);
         btnUpdate = (Button) findViewById(R.id.btnUpdate);
         btnNeuerPlan.setOnClickListener(this);
+        tvarzt = findViewById(R.id.tvArzt);
+        tvpatient = findViewById(R.id.tvPatient);
+        time_prefs = getSharedPreferences("time", MODE_PRIVATE);
+        //local class variables for the time settings are used in this activity
+        time_morgens= time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
+        time_mittags = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
+        time_abends =time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
+        time_zur_nacht =time_prefs.getString("time_zur_nacht", getResources().getString(R.string.default_zur_nacht));
 
         //add back button to navigation bar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -78,14 +86,11 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         //get persisted medplan if it exists
         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
         if (check != null) {
-            TextView tvarzt = findViewById(R.id.tvArzt);
-            TextView tvpatient = findViewById(R.id.tvPatient);
             tvarzt.setText("Austellender Arzt: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getDoctor());
             tvpatient.setText("Ausgestellt für: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getPatient());
 
             List<Meds> medlist = Meds.listAll(Meds.class);
             MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
-            listView = findViewById(R.id.listMain);
             listView.setAdapter(adapter);
 
         } else {
@@ -115,7 +120,11 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         startActivity(intent);
     }
 
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        renewTimes();
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -132,108 +141,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    //checks the online service for a newer Medplan und replaces the current one with the newer one
-    public void update_medplan(final Context context) {
-        SharedPreferences pref = getSharedPreferences("user_key", MODE_PRIVATE);
-        String url = "https://mobsysbackend.herokuapp.com/request.json";
-        //TODO queue verwenden oder löschen
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("uat", pref.getString("user_key", "missing"));
-        JSONObject parameters = new JSONObject(params);
-
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
-                url, parameters,
-                new Response.Listener() {
-                    @Override
-                    public void onResponse(Object response) {
-                        TextView tvarzt = findViewById(R.id.tvArzt);
-                        TextView tvpatient = findViewById(R.id.tvPatient);
-                        JSONObject json = (JSONObject) response;
-                        Gson g = new Gson();
-                        medplan = g.fromJson(json.toString(), MedPlan.class);
-                        Log.i("JSONtoString", "onResponse: " + json.toString());
-                        tvarzt.setText("Austellender Arzt: " + medplan.getDoctor());
-                        tvpatient.setText("Ausgestellt für: " + medplan.getPatient());
-
-                        List<Meds> medlist = medplan.meds;
-                        MedicineListAdapter adapter = new MedicineListAdapter(context, R.layout.adapter_view_layout, medlist);
-                        listView.setAdapter(adapter);
-                        for(int i=0; i<medlist.size(); i++)
-                        {
-                            //createAlarm(Meds.findById(Meds.class, (long) i));
-                        }
-                        //doing some databse stuff
-                        //remember record indexes start with 1
-                        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
-
-                        if (check == null) {
-                            Log.e("SATAN", "no empty object was found somethign must have went wrong(quite badly lol)");
-                        } else {
-                            check.setDoctor(medplan.getDoctor());
-                            check.setMedcount(medplan.getMedcount());
-                            check.setPatient(medplan.getPatient());
-                            //delete old meds
-                            Meds.deleteAll(Meds.class);
-                            //save new meds
-                            for (Meds _med : medplan.meds) {
-                                _med.save();
-                            }
-                            check.save();
-                        }
-
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-
-                        Log.i("TAG", "onErrorResponse: Something went wrong when updateing <.<");
-
-                    }
-                }
-        );
-        requestQueue.add(jsonObjReq);
-    }
-
-    private void startSettingsActivity() {
-        //create intent for the SettingsActivity
-        Intent intent = new Intent(this, SettingsActivity.class);
-        /*start*/
-        startActivity(intent);
-    }
-
-    //creates the alarm
-    //TODO
-    public void createAlarm() {
-//Manager abrufen
-        Log.i("Alarm", "createAlarm: ");
-        AlarmManager mng = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//Action zur Ausführung festlegen
-        Intent intent = new Intent(this, Alarm.class);
-//PendingIntent erstellen
-        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        //List<Meds> medlist = medplan.meds;
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        cal.set(Calendar.HOUR_OF_DAY, 1);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        Log.i("Millesekunden", "createAlarm: " +cal.getTimeInMillis());
-        //SharedPrefs zur Umwandlung in Uhrzeit
-        SharedPreferences prefs = getSharedPreferences("time", MODE_PRIVATE);
-        String time_morgens = prefs.getString("time_morgens", "No time defined");
-        String time_mittags = prefs.getString("time_mittags", "No time defined");
-        String time_abends = prefs.getString("time_abends", "No time defined");
-        String time_zur_nacht = prefs.getString("time_zur_nacht", "No time defined");
-        System.currentTimeMillis();
-        long waitingInMillis = cal.getTimeInMillis() - System.currentTimeMillis();;
-        mng.setRepeating(AlarmManager.RTC_WAKEUP,  waitingInMillis, 86400000, pi);
     }
 
 
@@ -260,10 +167,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Scanning result");
                 try {
-                    TextView tvarzt = findViewById(R.id.tvArzt);
-                    TextView tvpatient = findViewById(R.id.tvPatient);
-                    Log.i("als String", "onActivityResult: " + result.getContents().toString());
-                    //JSONObject jsonObject = XML.toJSONObject(result.getContents());
+
                     String medplan_string = result.getContents();
 
                     //check if the result contains xml stuff
@@ -310,7 +214,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         medstring3 = medstring3.replace("</S>", " ");
 
                         String meds_bmp = medstring1 + medstring2 + medstring3;
-                        //time to ocnvert the xml med string to j son and to the bmpmeds object
+                        //time to convert the xml med string to j son and to the bmpmeds object
                         Gson g2 = new Gson();
                         bmpmeds meds = g2.fromJson(XML.toJSONObject(meds_bmp).toString(), bmpmeds.class);
 
@@ -381,17 +285,29 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                             }
 
                         }
+                        if (Meds.listAll(Meds.class).size()>0) {
+                            for(Meds m: Meds.listAll(Meds.class)){
+                                if (!m.getDays().equals("")) {
+                                    cancelAlarm(m.getId());
+                                }
+                            }
+                        }
                         //save the new meds we got from the datamatrix scan and delete the old ones
                         Meds.deleteAll(Meds.class);
                         //save new meds
                         for (Meds _med : medlist) {
                             _med.save();
                         }
+                        for(Meds m: Meds.listAll(Meds.class)){
+                            if (!m.getDays().equals("")) {
+                                createAlarm(m.getDays(), m.getTime(), m.getId());
+                            }
+                        }
                         //set misc info
                         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
 
                         if (check == null) {
-                            Log.e("SATAN", "no empty object was found somethign must have went wrong(quite badly lol)");
+                            Log.e("CHECK", "no empty object was found somethign must have went wrong(quite badly lol)");
                         } else {
                             check.setDoctor(doctor);
                             check.setMedcount(medlist.size());
@@ -405,10 +321,9 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
                         Gson g = new Gson();
                         MedPlan medplan = g.fromJson(medplan_string, MedPlan.class);
-                        Log.i("Gson to String", "onActivityResult: " + g.toString());
                         tvarzt.setText("Austellender Arzt: " + medplan.doctor);
                         tvpatient.setText("Ausgestellt für: " + medplan.patient);
-                        //Log.i("TAG", "onActivityResult: " + jsonObject.toString());
+
                         List<Meds> medlist = medplan.meds;
                         MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
                         listView.setAdapter(adapter);
@@ -424,7 +339,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
 
                         if (check == null) {
-                            Log.e("SATAN", "no empty object was found somethign must have went wrong(quite badly lol)");
+                            Log.e("CHECK", "no empty object was found somethign must have went wrong(quite badly lol)");
                         } else {
                             check.setDoctor(medplan.getDoctor());
                             check.setMedcount(medplan.getMedcount());
@@ -446,14 +361,13 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 }).setNegativeButton("finish", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int which) {
-                        //finish();
+                        restart();
                     }
                 });
                 AlertDialog dialog = builder.create();
                 dialog.show();
                 try {
                     JSONObject jsonObject = XML.toJSONObject(result.getContents());
-                    Log.i("eigener Tag", "Medikationsplan in JSON: " + jsonObject.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -463,6 +377,257 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    //checks the online service for a newer Medplan und replaces the current one with the newer one
+    private void update_medplan(final Context context) {
+        SharedPreferences pref = getSharedPreferences("user_key", MODE_PRIVATE);
+        String url = "https://mobsysbackend.herokuapp.com/request.json";
+        //TODO queue verwenden oder löschen
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("uat", pref.getString("user_key", "missing"));
+        JSONObject parameters = new JSONObject(params);
+
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST,
+                url, parameters,
+                new Response.Listener() {
+                    @Override
+                    public void onResponse(Object response) {
+                        if (Meds.listAll(Meds.class).size()>0) {
+                            for(Meds m: Meds.listAll(Meds.class)){
+                                if (!m.getDays().equals("")) {
+                                    cancelAlarm(m.getId());
+                                }
+                            }
+                        }
+                        JSONObject json = (JSONObject) response;
+                        Gson g = new Gson();
+                        medplan = g.fromJson(json.toString(), MedPlan.class);
+                        Log.i("JSONtoString", "onResponse: " + json.toString());
+                        tvarzt.setText("Austellender Arzt: " + medplan.getDoctor());
+                        tvpatient.setText("Ausgestellt für: " + medplan.getPatient());
+
+                        List<Meds> medlist = medplan.getMeds();
+                        MedicineListAdapter adapter = new MedicineListAdapter(context, R.layout.adapter_view_layout, medlist);
+                        listView.setAdapter(adapter);
+
+                        for(Meds m: Meds.listAll(Meds.class)){
+                            if (!m.getDays().equals("")) {
+                                createAlarm(m.getDays(), m.getTime(), m.getId());
+                            }
+                        }
+                        //doing some databse stuff
+                        //remember record indexes start with 1
+                        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
+
+                        if (check == null) {
+                            Log.e("CHECK", "no empty object was found somethign must have went wrong(quite badly lol)");
+                        } else {
+                            check.setDoctor(medplan.getDoctor());
+                            check.setMedcount(medplan.getMedcount());
+                            check.setPatient(medplan.getPatient());
+                            //delete old meds
+                            Meds.deleteAll(Meds.class);
+                            //save new meds
+                            for (Meds _med : medplan.meds) {
+                                _med.save();
+                            }
+                            check.save();
+                        }
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                        Log.i("TAG", "onErrorResponse: Something went wrong during the updateing");
+
+                    }
+                }
+        );
+        requestQueue.add(jsonObjReq);
+    }
+
+    //creates the alarm
+    private void createAlarm(String days, String time, long id) {
+
+        Calendar cal = Calendar.getInstance();
+        switch(days){
+            case "Montag":
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+                break;
+            case "Dienstag":
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
+                break;
+            case "Mittwoch":
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.WEDNESDAY);
+                break;
+            case "Donnerstag":
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
+                break;
+            case "Freitag":
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY);
+                break;
+            case "Samstag":
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+                break;
+            case "Sonntag":
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+                break;
+            default:
+                break;
+        }
+
+        switch(time){
+            case "Morgens":
+                time_morgens = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_morgens.substring(0,2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_morgens.substring(3,5)));
+                break;
+            case "Mittags":
+                time_mittags = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_mittags.substring(0,2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_mittags.substring(3,5)));
+                break;
+            case "Abends":
+                time_abends = time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_abends.substring(0,2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_abends.substring(3,5)));
+                break;
+            case "Zur Nacht":
+                time_zur_nacht = time_prefs.getString("time_zur_nacht", getResources().getString(R.string.default_zur_nacht));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_zur_nacht.substring(0,2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_zur_nacht.substring(3,5)));
+                break;
+            default:
+
+                break;
+        }
+
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        //add a day or a week if the cal is in the past right now
+        if(cal.before(Calendar.getInstance())){
+            if(days.equals("Täglich") || days.equals("Taeglich")){
+                cal.add(Calendar.DATE,1);
+            } else {
+                cal.add(Calendar.DATE,7);
+            }
+
+        }
+        //determine the alarm intervalls
+        long intervalMillis;
+        if(days.equals("Täglich") || days.equals("Taeglich")){
+            intervalMillis = 86400000; //daily
+        } else {
+            intervalMillis = 604800000; //weekly
+        }
+        //Intent with id (for the notification later on)
+        Intent intent = new Intent(this, Alarm.class);
+        intent.putExtra("med_id", id);
+//PendingIntent uses the id as the request code
+        PendingIntent pi = PendingIntent.getBroadcast(this, (int) id, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        //set repeating alarm
+        AlarmManager mng = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        mng.setRepeating(AlarmManager.RTC_WAKEUP,  cal.getTimeInMillis(), intervalMillis, pi);
+    }
+
+    private void cancelAlarm(long id) {
+        Intent intent = new Intent(this, Alarm.class);
+//cancel the pending intent, wich was specified for a Medicine (id as request code)
+        PendingIntent pi = PendingIntent.getBroadcast(this, (int) id, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager mng = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        mng.cancel(pi);
+    }
+
+    private void startSettingsActivity() {
+        //create intent for the SettingsActivity
+        Intent intent = new Intent(this, SettingsActivity.class);
+        /*start*/
+        startActivity(intent);
+    }
+
+    /*realizes changed time settings
+    cancels the affected alarms and creates new ones
+     */
+    private void renewTimes() {
+        String time_morgens_new = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
+        String time_mittags_new = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
+        String time_abends_new = time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
+        String time_zur_nacht_new = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
+        /*comparison of class olcal time variblaes and new Preferences
+        deletes alarms affected medicines and creates new alarms for them
+         */
+
+        if (!time_morgens.equals(time_morgens_new)) {
+            //list all affected Meds and iterate for each
+            List<Meds> meds = Meds.find(Meds.class, "time = ?", "Morgens");
+            for (Meds m : meds) {
+                if (!m.getDays().equals("")) {
+                    cancelAlarm(m.getId());
+                }
+            }
+
+            for(Meds m: meds){
+                if (!m.getDays().equals("")) {
+                    createAlarm(m.getDays(), m.getTime(), m.getId());
+                }
+            }
+        }
+
+        if (!time_mittags.equals(time_mittags_new)) {
+            List<Meds> meds = Meds.find(Meds.class, "time = ?", "Mittags");
+            for (Meds m : meds) {
+                if (!m.getDays().equals("")) {
+                    cancelAlarm(m.getId());
+                }
+            }
+
+            for(Meds m: meds){
+                if (!m.getDays().equals("")) {
+                    createAlarm(m.getDays(), m.getTime(), m.getId());
+                }
+            }
+        }
+        if (!time_abends.equals(time_abends_new)) {
+            List<Meds> meds = Meds.find(Meds.class, "time = ?", "Abends");
+            for (Meds m : meds) {
+                if (!m.getDays().equals("")) {
+                    cancelAlarm(m.getId());
+                }
+            }
+
+            for(Meds m: meds){
+                if (!m.getDays().equals("")) {
+                    createAlarm(m.getDays(), m.getTime(), m.getId());
+                }
+            }
+        }
+        if (!time_zur_nacht.equals(time_zur_nacht_new)) {
+            List<Meds> meds = Meds.find(Meds.class, "time = ?", "Morgens");
+            for (Meds m : meds) {
+                if (!m.getDays().equals("")) {
+                    cancelAlarm(m.getId());
+                }
+            }
+
+            for(Meds m: meds){
+                if (!m.getDays().equals("")) {
+                    createAlarm(m.getDays(), m.getTime(), m.getId());
+                }
+            }
+        }
+    }
+    private void restart() {
+        Intent intent = new Intent(this, MedplanActivity.class);
+        startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
 }

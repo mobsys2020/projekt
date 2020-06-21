@@ -1,4 +1,4 @@
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<resources>
     <string name="app_name">My Health Application</string>
     <string name="title_activity_settings">Settings</string>
 
@@ -24,7 +24,7 @@
     <string name="update">Update</string>
 
     <!-- SettingsActivity -->
-    <string name="aendern">ändern</string>
+    <string name="btn_aendern">ändern</string>
     <string name="default_morgens">08:00</string>
     <string name="default_mittags">13:00</string>
     <string name="default_abends">18:00</string>
@@ -40,5 +40,7 @@
     <string name="tv_mainAct">User Access Token</string>
     <string name="tv_arzt">Ausstellender Arzt:</string>
     <string name="tv_patient">Ausgestellt für:</string>
+    <string name="tvUAT">UAT</string>
+    <string name="prompt_text_tvUAT">ABC123</string>
 
 </resources>
