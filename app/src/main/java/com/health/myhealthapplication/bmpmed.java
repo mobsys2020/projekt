@@ -6,12 +6,13 @@ package com.health.myhealthapplication;
  */
 
 public class bmpmed {
-    public String m = ""; //morgens
-    public String v = ""; //abends
-    public String h = ""; //zur nacht
-    public String d = ""; //mittags
+    public String m = "0"; //morgens
+    public String v = "0"; //abends
+    public String h = "0"; //zur nacht
+    public String d = "0"; //mittags
     public String a = ""; //arzneimittelname
     public String p = ""; //pharmazentralnummer -> ersetzt durch namen in software
-    public String du = ""; //dosiereinheit
+    public String du = "1"; //dosiereinheit
+    public String t = ""; //freiform vergabezeit
 
 }

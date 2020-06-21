@@ -1,5 +1,7 @@
 package com.health.myhealthapplication;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -35,9 +37,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 /**
@@ -314,34 +320,100 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         bmpmeds meds = g2.fromJson(XML.toJSONObject(meds_bmp).toString(), bmpmeds.class);
                         //(JsonObject) XML.toJSONObject(meds_bmp);
                         Log.e("Satan", "" + meds.M.size());
-
+                        ArrayList<Meds> medlist = new ArrayList<>();
                         for (bmpmed m : meds.M) {
+                            Log.e("Satan", "blyat1");
                             //check if dosage is part of our enum class
+                            String quantity_mod = "";
                             if (m.du.charAt(0) >= 'a' && m.du.charAt(0) <= 'v') {
+                                quantity_mod = enum_dosierung.valueOf(m.du).get_name();
                             } else {
-                                //add z infornt so we can get the dosage out of our enum
-                                m.du = "z" + m.du;
+                                if(m.du.charAt(0) == '#'){
+                                    quantity_mod = "Messlöffel";
+                                }else {
+                                    Log.e("Satan", "blyat2");
+                                    //add z infornt so we can get the dosage out of our enum
+                                    m.du = "z" + m.du;
+                                    quantity_mod = enum_dosierung.valueOf(m.du).get_name();
+                                }
                             }
-                            String quantity_mod = enum_dosierung.valueOf(m.du).get_name();
+                            Log.e("Satan", "blyat3"+m.m+" "+quantity_mod);
+                            //morgens
+                            Meds med_buffer;
+                            if(m.m.charAt(0) > '0'){
+                                Log.e("Satan", "blyat_extreme");
+                                med_buffer = new Meds();
+                                med_buffer.setName(m.p);
+                                med_buffer.time = "Morgens";
+                                med_buffer.quantity=m.m + quantity_mod;
+                                med_buffer.days="Täglich";
+                                medlist.add(med_buffer);
+
+                            }
+                            //abends
+                            if(m.v.charAt(0) > '0'){
+                                med_buffer = new Meds();
+                                med_buffer.setName(m.p);
+                                med_buffer.time = "Abends";
+                                med_buffer.quantity=m.m + quantity_mod;
+                                med_buffer.days="Täglich";
+                                medlist.add(med_buffer);
+
+                            }
+                            //zur nacht
+                            if(m.h.charAt(0) > '0'){
+                                med_buffer = new Meds();
+                                med_buffer.setName(m.p);
+                                med_buffer.time = "Zur Nacht";
+                                med_buffer.quantity=m.m + quantity_mod;
+                                med_buffer.days="Täglich";
+                                medlist.add(med_buffer);
+
+                            }
+                            //mittags
+                            if(m.d.charAt(0) > '0'){
+                                med_buffer = new Meds();
+                                med_buffer.setName(m.p);
+                                med_buffer.time = "Mittags";
+                                med_buffer.quantity=m.m + quantity_mod;
+                                med_buffer.days="Täglich";
+                                medlist.add(med_buffer);
+                            }
+                            //if freeform dosage days is set do other stuff yoo
+                            if(!m.t.equals("")){
+                                med_buffer = new Meds();
+                                med_buffer.setName(m.p);
+                                med_buffer.setTime("Mittags");
+                                med_buffer.setDays(m.t);
+                                medlist.add(med_buffer);
+                            }
+
                             Log.e("Satan", quantity_mod);
+                        }
+                        //test save data from datamatrix
+                        Meds.deleteAll(Meds.class);
+                        //save new meds
+                        for (Meds _med : medlist) {
+                            _med.save();
                         }
 
 
+                    } else {
+
+
+                        Gson g = new Gson();
+                        MedPlan medplan = g.fromJson(medplan_string, MedPlan.class);
+                        Log.i("Gson to String", "onActivityResult: " + g.toString());
+                        tvarzt.setText("Austellender Arzt: " + medplan.doctor);
+                        tvpatient.setText("Ausgestellt für: " + medplan.patient);
+                        //Log.i("TAG", "onActivityResult: " + jsonObject.toString());
+                        List<Meds> medlist = medplan.meds;
+                        MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
+                        listView.setAdapter(adapter);
+                        builder.setMessage("Medikationsplan erfasst");
+
+                        //TODO persistency
                     }
-
-
-                    Gson g = new Gson();
-                    MedPlan medplan = g.fromJson(medplan_string, MedPlan.class);
-                    Log.i("Gson to String", "onActivityResult: " + g.toString());
-                    tvarzt.setText("Austellender Arzt: " + medplan.doctor);
-                    tvpatient.setText("Ausgestellt für: " + medplan.patient);
-                    //Log.i("TAG", "onActivityResult: " + jsonObject.toString());
-                    List<Meds> medlist = medplan.meds;
-                    MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
-                    listView.setAdapter(adapter);
-                    builder.setMessage("Medikationsplan erfasst");
-
-                    //TODO persistency
 
 
                 } catch (Exception e) {
