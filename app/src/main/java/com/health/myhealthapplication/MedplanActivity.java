@@ -355,7 +355,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                                 med_buffer = new Meds();
                                 med_buffer.setName(m.p);
                                 med_buffer.time = "Abends";
-                                med_buffer.quantity=m.m + quantity_mod;
+                                med_buffer.quantity=m.v + quantity_mod;
                                 med_buffer.days="Täglich";
                                 medlist.add(med_buffer);
 
@@ -365,7 +365,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                                 med_buffer = new Meds();
                                 med_buffer.setName(m.p);
                                 med_buffer.time = "Zur Nacht";
-                                med_buffer.quantity=m.m + quantity_mod;
+                                med_buffer.quantity=m.h + quantity_mod;
                                 med_buffer.days="Täglich";
                                 medlist.add(med_buffer);
 
@@ -375,7 +375,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                                 med_buffer = new Meds();
                                 med_buffer.setName(m.p);
                                 med_buffer.time = "Mittags";
-                                med_buffer.quantity=m.m + quantity_mod;
+                                med_buffer.quantity=m.d + quantity_mod;
                                 med_buffer.days="Täglich";
                                 medlist.add(med_buffer);
                             }
@@ -395,6 +395,18 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         //save new meds
                         for (Meds _med : medlist) {
                             _med.save();
+                        }
+                        //set misc info
+                        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
+
+                        if (check == null) {
+                            Log.e("SATAN", "no empty object was found somethign must have went wrong(quite badly lol)");
+                        } else {
+                            check.setDoctor(doctor);
+                            check.setMedcount(medlist.size());
+                            check.setPatient(vorname+" "+nachname);
+                            //delete old meds
+                            check.save();
                         }
 
 
