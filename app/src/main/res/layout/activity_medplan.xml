@@ -5,7 +5,8 @@
     android:layout_width="fill_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:padding="@dimen/padding_layout_medplan_activity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/orange">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,27 +18,31 @@
             android:layout_width="0dp"
             android:layout_weight="6"
             android:layout_height="wrap_content"
-            android:text="@string/neuer_medikationsplan">
+            android:text="@string/neuer_medikationsplan"
+            android:background="@color/colorAccent">
         </Button>
         <Button
             android:id="@+id/btnUpdate"
             android:layout_width="0dp"
             android:layout_weight="4"
             android:layout_height="wrap_content"
-            android:text="@string/update">
+            android:text="@string/update"
+            android:background="@color/colorAccent">
         </Button>
     </LinearLayout>
     <TextView
         android:id="@+id/tvArzt"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="@string/tv_arzt">
+    android:text="@string/tv_arzt"
+        android:background="@color/lighter_green">
     </TextView>
     <TextView
         android:id="@+id/tvPatient"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/tv_patient">
+        android:text="@string/tv_patient"
+        android:background="@color/lighter_green">
     </TextView>
     <ListView
         android:id="@+id/listMain"

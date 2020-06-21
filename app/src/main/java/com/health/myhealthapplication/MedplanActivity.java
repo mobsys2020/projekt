@@ -383,7 +383,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
     private void update_medplan(final Context context) {
         SharedPreferences pref = getSharedPreferences("user_key", MODE_PRIVATE);
         String url = "https://mobsysbackend.herokuapp.com/request.json";
-        //TODO queue verwenden oder löschen
+
         RequestQueue queue = Volley.newRequestQueue(this);
 
         Map<String, String> params = new HashMap<String, String>();
@@ -423,7 +423,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
 
                         if (check == null) {
-                            Log.e("CHECK", "no empty object was found somethign must have went wrong(quite badly lol)");
+                            Log.e("CHECK", "No empty object was found. something must have went wrong");
                         } else {
                             check.setDoctor(medplan.getDoctor());
                             check.setMedcount(medplan.getMedcount());
