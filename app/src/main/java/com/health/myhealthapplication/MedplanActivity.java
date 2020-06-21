@@ -86,8 +86,8 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         //get persisted medplan if it exists
         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
         if (check != null) {
-            tvarzt.setText("Austellender Arzt: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getDoctor());
-            tvpatient.setText("Ausgestellt für: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getPatient());
+            tvarzt.setText("Austellender Arzt: " + check.getDoctor());
+            tvpatient.setText("Ausgestellt für: " + check.getPatient());
 
             List<Meds> medlist = Meds.listAll(Meds.class);
             MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
@@ -560,7 +560,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         String time_morgens_new = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
         String time_mittags_new = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
         String time_abends_new = time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
-        String time_zur_nacht_new = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
+        String time_zur_nacht_new = time_prefs.getString("time_zur_nacht", getResources().getString(R.string.default_morgens));
         /*comparison of class olcal time variblaes and new Preferences
         deletes alarms affected medicines and creates new alarms for them
          */

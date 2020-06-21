@@ -258,7 +258,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         //load and print SharedPreferences
         SharedPreferences prefs = getSharedPreferences("time", MODE_PRIVATE);
-        String time_morgens = prefs.getString("time_morens", getResources().getString(R.string.default_morgens));
+        String time_morgens = prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
         tv1.setText(time_morgens);
         String time_mittags = prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
         tv2.setText(time_mittags);
