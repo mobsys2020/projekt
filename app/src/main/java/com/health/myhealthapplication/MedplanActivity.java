@@ -84,7 +84,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
             tvpatient.setText("Ausgestellt für: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getPatient());
 
             List<Meds> medlist = Meds.listAll(Meds.class);
-            Log.e("listsizeMEDS", "0" + medlist.size());
             MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
             listView = findViewById(R.id.listMain);
             listView.setAdapter(adapter);
@@ -274,8 +273,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         String nachname = medplan_string.substring(medplan_string.indexOf("f=") + 3, medplan_string.indexOf("\" b=\""));
                         //get Doctorname
                         String doctor = medplan_string.substring(medplan_string.indexOf("A n=") + 5, medplan_string.indexOf("\" s=\""));
-                        Log.e("test123", vorname + " " + nachname + " - " + doctor);
-
 
                         //replace mednames since we dont have the db for them
 
@@ -310,8 +307,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         medstring3 = medstring3.replace("\">", " ");
                         medstring3 = medstring3.replace("</S>", " ");
 
-                        Log.e("SATAN", "\n" + medstring1 + "\n" + medstring2 + "\n" + medstring3);
-
                         String meds_bmp = medstring1 + medstring2 + medstring3;
 
                         Gson g2 = new Gson();
@@ -319,10 +314,8 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
                         bmpmeds meds = g2.fromJson(XML.toJSONObject(meds_bmp).toString(), bmpmeds.class);
                         //(JsonObject) XML.toJSONObject(meds_bmp);
-                        Log.e("Satan", "" + meds.M.size());
                         ArrayList<Meds> medlist = new ArrayList<>();
                         for (bmpmed m : meds.M) {
-                            Log.e("Satan", "blyat1");
                             //check if dosage is part of our enum class
                             String quantity_mod = "";
                             if (m.du.charAt(0) >= 'a' && m.du.charAt(0) <= 'v') {
@@ -331,17 +324,14 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                                 if(m.du.charAt(0) == '#'){
                                     quantity_mod = "Messlöffel";
                                 }else {
-                                    Log.e("Satan", "blyat2");
                                     //add z infornt so we can get the dosage out of our enum
                                     m.du = "z" + m.du;
                                     quantity_mod = enum_dosierung.valueOf(m.du).get_name();
                                 }
                             }
-                            Log.e("Satan", "blyat3"+m.m+" "+quantity_mod);
                             //morgens
                             Meds med_buffer;
                             if(m.m.charAt(0) > '0'){
-                                Log.e("Satan", "blyat_extreme");
                                 med_buffer = new Meds();
                                 med_buffer.setName(m.p);
                                 med_buffer.time = "Morgens";
@@ -389,7 +379,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                                 medlist.add(med_buffer);
                             }
 
-                            Log.e("Satan", quantity_mod);
                         }
                         //test save data from datamatrix
                         Meds.deleteAll(Meds.class);
@@ -425,7 +414,23 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         listView.setAdapter(adapter);
                         builder.setMessage("Medikationsplan erfasst");
 
-                        //TODO persistency
+                        //test save data from datamatrix
+                        Meds.deleteAll(Meds.class);
+                        //save new meds
+                        for (Meds _med : medlist) {
+                            _med.save();
+                        }
+                        //set misc info
+                        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
+
+                        if (check == null) {
+                            Log.e("SATAN", "no empty object was found somethign must have went wrong(quite badly lol)");
+                        } else {
+                            check.setDoctor(medplan.getDoctor());
+                            check.setMedcount(medplan.getMedcount());
+                            check.setPatient(medplan.getPatient());
+                            check.save();
+                        }
                     }
 
 
