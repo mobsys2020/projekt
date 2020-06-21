@@ -268,13 +268,15 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
                     //check if the result contains xml stuff
                     if (medplan_string.contains("<MP")) {
+                        //OH GOD PLEASE DON'T TAKE A CLOSER LOOK AT THIS ITS JUST A BAD WORKAROUND TO GET BMP MEDPLAN OBJECT TO FIT OUR OBJECT
                         //get Patientname
                         String vorname = medplan_string.substring(medplan_string.indexOf("g=") + 3, medplan_string.indexOf("\" f=\""));
                         String nachname = medplan_string.substring(medplan_string.indexOf("f=") + 3, medplan_string.indexOf("\" b=\""));
                         //get Doctorname
                         String doctor = medplan_string.substring(medplan_string.indexOf("A n=") + 5, medplan_string.indexOf("\" s=\""));
 
-                        //replace mednames since we dont have the db for them
+                        //replace known mednames since we dont have the db for them
+                        //sadly the t specification isnt coming with hte data we got as an example so we cant take that as the name <.<
 
                         medplan_string = medplan_string.replace("230272", "Metoprolol succinat");
                         medplan_string = medplan_string.replace("2223945", "Ramipril");
@@ -308,12 +310,11 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         medstring3 = medstring3.replace("</S>", " ");
 
                         String meds_bmp = medstring1 + medstring2 + medstring3;
-
+                        //time to ocnvert the xml med string to j son and to the bmpmeds object
                         Gson g2 = new Gson();
-
-
                         bmpmeds meds = g2.fromJson(XML.toJSONObject(meds_bmp).toString(), bmpmeds.class);
-                        //(JsonObject) XML.toJSONObject(meds_bmp);
+
+                        //now its time to get the bmpmeds converted to fit our datamodel
                         ArrayList<Meds> medlist = new ArrayList<>();
                         for (bmpmed m : meds.M) {
                             //check if dosage is part of our enum class
@@ -380,7 +381,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                             }
 
                         }
-                        //test save data from datamatrix
+                        //save the new meds we got from the datamatrix scan and delete the old ones
                         Meds.deleteAll(Meds.class);
                         //save new meds
                         for (Meds _med : medlist) {
@@ -395,7 +396,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                             check.setDoctor(doctor);
                             check.setMedcount(medlist.size());
                             check.setPatient(vorname+" "+nachname);
-                            //delete old meds
                             check.save();
                         }
 
@@ -414,7 +414,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         listView.setAdapter(adapter);
                         builder.setMessage("Medikationsplan erfasst");
 
-                        //test save data from datamatrix
+                        //save meds from qrcode scan
                         Meds.deleteAll(Meds.class);
                         //save new meds
                         for (Meds _med : medlist) {
