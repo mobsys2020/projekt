@@ -39,6 +39,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * MedplanActivity shows the for the patient relevant information of the currently loaded "Medikationsplan".
@@ -61,6 +62,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
     String time_mittags;
     String time_abends;
     String time_zur_nacht;
+    private static final String ALPHA_NUMERIC_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +84,19 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
         //add back button to navigation bar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        SharedPreferences pref = getSharedPreferences("user_key", MODE_PRIVATE);
+        SharedPreferences.Editor ed = pref.edit();
+        if (pref.getString("user_key", null) == null) {
+            StringBuilder sb = new StringBuilder();
+            //small algorithm
+            Random rd = new Random();
+            for (int it = 0; it < 20; it++) {
+                sb.append(ALPHA_NUMERIC_STRING.charAt((int) (rd.nextFloat() * ALPHA_NUMERIC_STRING.length())));
+            }
+            ed.putString("user_key", sb.toString());
+
+            ed.commit();
+        }
 
         //get persisted medplan if it exists
         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
