@@ -172,7 +172,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
                     //check if the result contains xml stuff
                     if (medplan_string.contains("<MP")) {
-                        //OH GOD PLEASE DON'T TAKE A CLOSER LOOK AT THIS ITS JUST A BAD WORKAROUND TO GET BMP MEDPLAN OBJECT TO FIT OUR OBJECT
+                        //OH GOD PLEASE DON'T TAKE A CLOSER LOOK AT THIS ITS JUST A BAD WORKAROUND TO GET THE BMP MEDPLAN OBJECT TO FIT OUR OBJECT
                         //get Patientname
                         String vorname = medplan_string.substring(medplan_string.indexOf("g=") + 3, medplan_string.indexOf("\" f=\""));
                         String nachname = medplan_string.substring(medplan_string.indexOf("f=") + 3, medplan_string.indexOf("\" b=\""));
@@ -413,11 +413,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         MedicineListAdapter adapter = new MedicineListAdapter(context, R.layout.adapter_view_layout, medlist);
                         listView.setAdapter(adapter);
 
-                        for(Meds m: Meds.listAll(Meds.class)){
-                            if (!m.getDays().equals("")) {
-                                createAlarm(m.getDays(), m.getTime(), m.getId());
-                            }
-                        }
+
                         //doing some databse stuff
                         //remember record indexes start with 1
                         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
@@ -433,6 +429,9 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                             //save new meds
                             for (Meds _med : medplan.meds) {
                                 _med.save();
+                                if (!_med.getDays().equals("")) {
+                                    createAlarm(_med.getDays(), _med.getTime(), _med.getId());
+                                }
                             }
                             check.save();
                         }
@@ -530,7 +529,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         Intent intent = new Intent(this, Alarm.class);
         intent.putExtra("med_id", id);
 //PendingIntent uses the id as the request code
-        PendingIntent pi = PendingIntent.getBroadcast(this, (int) id, intent,
+        PendingIntent pi = PendingIntent.getBroadcast(this, (int)id, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         //set repeating alarm
         AlarmManager mng = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
