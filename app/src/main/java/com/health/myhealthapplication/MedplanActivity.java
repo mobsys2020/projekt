@@ -75,10 +75,10 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         tvpatient = findViewById(R.id.tvPatient);
         time_prefs = getSharedPreferences("time", MODE_PRIVATE);
         //local class variables for the time settings are used in this activity
-        time_morgens= time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
+        time_morgens = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
         time_mittags = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
-        time_abends =time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
-        time_zur_nacht =time_prefs.getString("time_zur_nacht", getResources().getString(R.string.default_zur_nacht));
+        time_abends = time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
+        time_zur_nacht = time_prefs.getString("time_zur_nacht", getResources().getString(R.string.default_zur_nacht));
 
         //add back button to navigation bar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -125,6 +125,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         super.onResume();
         renewTimes();
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -167,187 +168,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Scanning result");
                 try {
-
-                    String medplan_string = result.getContents();
-
-                    //check if the result contains xml stuff
-                    if (medplan_string.contains("<MP")) {
-                        //OH GOD PLEASE DON'T TAKE A CLOSER LOOK AT THIS ITS JUST A BAD WORKAROUND TO GET BMP MEDPLAN OBJECT TO FIT OUR OBJECT
-                        //get Patientname
-                        String vorname = medplan_string.substring(medplan_string.indexOf("g=") + 3, medplan_string.indexOf("\" f=\""));
-                        String nachname = medplan_string.substring(medplan_string.indexOf("f=") + 3, medplan_string.indexOf("\" b=\""));
-                        //get Doctorname
-                        String doctor = medplan_string.substring(medplan_string.indexOf("A n=") + 5, medplan_string.indexOf("\" s=\""));
-
-                        //replace known mednames since we dont have the db for them
-                        //sadly the t specification isnt coming with hte data we got as an example so we cant take that as the name <.<
-
-                        medplan_string = medplan_string.replace("230272", "Metoprolol succinat");
-                        medplan_string = medplan_string.replace("2223945", "Ramipril");
-                        medplan_string = medplan_string.replace("558736", "Insulin aspart");
-                        medplan_string = medplan_string.replace("9900751", "Simvastatim");
-                        medplan_string = medplan_string.replace("2239828", "Fentanyl");
-                        medplan_string = medplan_string.replace("2455874", "Johanniskraut Trockenextrakt");
-
-                        //time to get all meds
-                        StringBuffer workingcopy = new StringBuffer(medplan_string);
-                        workingcopy.replace(0, medplan_string.indexOf("<S") - 1, "");
-                        String medstring1 = workingcopy.substring(workingcopy.indexOf("<S>"), workingcopy.indexOf("</S>") + 4);
-                        //remove first medstring
-                        workingcopy.replace(workingcopy.indexOf("<S>"), workingcopy.indexOf("</S>") + 4, "");
-                        //remove first medstring <S> tags
-                        medstring1 = medstring1.replace("<S>", "");
-                        medstring1 = medstring1.replace("</S>", "");
-
-                        //get second medstring
-                        String medstring2 = workingcopy.toString().substring(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4);
-                        //remove second medstring
-                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4, " ");
-                        medstring2 = medstring2.replace("<S t=\"zu besonderen Zeiten anzuwendende Medikamente\">", " ");
-                        medstring2 = medstring2.replace("</S>", " ");
-
-                        //get third medstring
-                        String medstring3 = workingcopy.toString().substring(workingcopy.indexOf("\">"), workingcopy.indexOf("</S>") + 4);
-                        //remove second medstring
-                        workingcopy = workingcopy.replace(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4, " ");
-                        medstring3 = medstring3.replace("\">", " ");
-                        medstring3 = medstring3.replace("</S>", " ");
-
-                        String meds_bmp = medstring1 + medstring2 + medstring3;
-                        //time to convert the xml med string to j son and to the bmpmeds object
-                        Gson g2 = new Gson();
-                        bmpmeds meds = g2.fromJson(XML.toJSONObject(meds_bmp).toString(), bmpmeds.class);
-
-                        //now its time to get the bmpmeds converted to fit our datamodel
-                        ArrayList<Meds> medlist = new ArrayList<>();
-                        for (bmpmed m : meds.M) {
-                            //check if dosage is part of our enum class
-                            String quantity_mod = "";
-                            if (m.du.charAt(0) >= 'a' && m.du.charAt(0) <= 'v') {
-                                quantity_mod = enum_dosierung.valueOf(m.du).get_name();
-                            } else {
-                                if(m.du.charAt(0) == '#'){
-                                    quantity_mod = "Messlöffel";
-                                }else {
-                                    //add z infornt so we can get the dosage out of our enum
-                                    m.du = "z" + m.du;
-                                    quantity_mod = enum_dosierung.valueOf(m.du).get_name();
-                                }
-                            }
-                            //morgens
-                            Meds med_buffer;
-                            if(m.m.charAt(0) > '0'){
-                                med_buffer = new Meds();
-                                med_buffer.setName(m.p);
-                                med_buffer.time = "Morgens";
-                                med_buffer.quantity=m.m + quantity_mod;
-                                med_buffer.days="Täglich";
-                                medlist.add(med_buffer);
-
-                            }
-                            //abends
-                            if(m.v.charAt(0) > '0'){
-                                med_buffer = new Meds();
-                                med_buffer.setName(m.p);
-                                med_buffer.time = "Abends";
-                                med_buffer.quantity=m.v + quantity_mod;
-                                med_buffer.days="Täglich";
-                                medlist.add(med_buffer);
-
-                            }
-                            //zur nacht
-                            if(m.h.charAt(0) > '0'){
-                                med_buffer = new Meds();
-                                med_buffer.setName(m.p);
-                                med_buffer.time = "Zur Nacht";
-                                med_buffer.quantity=m.h + quantity_mod;
-                                med_buffer.days="Täglich";
-                                medlist.add(med_buffer);
-
-                            }
-                            //mittags
-                            if(m.d.charAt(0) > '0'){
-                                med_buffer = new Meds();
-                                med_buffer.setName(m.p);
-                                med_buffer.time = "Mittags";
-                                med_buffer.quantity=m.d + quantity_mod;
-                                med_buffer.days="Täglich";
-                                medlist.add(med_buffer);
-                            }
-                            //if freeform dosage days is set do other stuff yoo
-                            if(!m.t.equals("")){
-                                med_buffer = new Meds();
-                                med_buffer.setName(m.p);
-                                med_buffer.setTime("Mittags");
-                                //med_buffer.setDays(m.t);
-                                med_buffer.setQuantity(m.t +" "+quantity_mod);
-                                medlist.add(med_buffer);
-                            }
-
-                        }
-                        if (Meds.listAll(Meds.class).size()>0) {
-                            for(Meds m: Meds.listAll(Meds.class)){
-                                if (!m.getDays().equals("")) {
-                                    cancelAlarm(m.getId());
-                                }
-                            }
-                        }
-                        //save the new meds we got from the datamatrix scan and delete the old ones
-                        Meds.deleteAll(Meds.class);
-                        //save new meds
-                        for (Meds _med : medlist) {
-                            _med.save();
-                        }
-                        for(Meds m: Meds.listAll(Meds.class)){
-                            if (!m.getDays().equals("")) {
-                                createAlarm(m.getDays(), m.getTime(), m.getId());
-                            }
-                        }
-                        //set misc info
-                        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
-
-                        if (check == null) {
-                            Log.e("CHECK", "no empty object was found somethign must have went wrong(quite badly lol)");
-                        } else {
-                            check.setDoctor(doctor);
-                            check.setMedcount(medlist.size());
-                            check.setPatient(vorname+" "+nachname);
-                            check.save();
-                        }
-
-
-                    } else {
-
-
-                        Gson g = new Gson();
-                        MedPlan medplan = g.fromJson(medplan_string, MedPlan.class);
-                        tvarzt.setText("Austellender Arzt: " + medplan.doctor);
-                        tvpatient.setText("Ausgestellt für: " + medplan.patient);
-
-                        List<Meds> medlist = medplan.meds;
-                        MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
-                        listView.setAdapter(adapter);
-                        builder.setMessage("Medikationsplan erfasst");
-
-                        //save meds from qrcode scan
-                        Meds.deleteAll(Meds.class);
-                        //save new meds
-                        for (Meds _med : medlist) {
-                            _med.save();
-                        }
-                        //set misc info
-                        Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
-
-                        if (check == null) {
-                            Log.e("CHECK", "no empty object was found somethign must have went wrong(quite badly lol)");
-                        } else {
-                            check.setDoctor(medplan.getDoctor());
-                            check.setMedcount(medplan.getMedcount());
-                            check.setPatient(medplan.getPatient());
-                            check.save();
-                        }
-                    }
-
+                    loadBMP(result, builder);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -395,8 +216,8 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 new Response.Listener() {
                     @Override
                     public void onResponse(Object response) {
-                        if (Meds.listAll(Meds.class).size()>0) {
-                            for(Meds m: Meds.listAll(Meds.class)){
+                        if (Meds.listAll(Meds.class).size() > 0) {
+                            for (Meds m : Meds.listAll(Meds.class)) {
                                 if (!m.getDays().equals("")) {
                                     cancelAlarm(m.getId());
                                 }
@@ -413,7 +234,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         MedicineListAdapter adapter = new MedicineListAdapter(context, R.layout.adapter_view_layout, medlist);
                         listView.setAdapter(adapter);
 
-                        for(Meds m: Meds.listAll(Meds.class)){
+                        for (Meds m : Meds.listAll(Meds.class)) {
                             if (!m.getDays().equals("")) {
                                 createAlarm(m.getDays(), m.getTime(), m.getId());
                             }
@@ -454,8 +275,9 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
     //creates the alarm
     private void createAlarm(String days, String time, long id) {
 
+        //prepare the Calendar depending on the given Values
         Calendar cal = Calendar.getInstance();
-        switch(days){
+        switch (days) {
             case "Montag":
                 cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
                 break;
@@ -481,26 +303,26 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 break;
         }
 
-        switch(time){
+        switch (time) {
             case "Morgens":
                 time_morgens = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
-                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_morgens.substring(0,2)));
-                cal.set(Calendar.MINUTE, Integer.parseInt(time_morgens.substring(3,5)));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_morgens.substring(0, 2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_morgens.substring(3, 5)));
                 break;
             case "Mittags":
                 time_mittags = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
-                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_mittags.substring(0,2)));
-                cal.set(Calendar.MINUTE, Integer.parseInt(time_mittags.substring(3,5)));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_mittags.substring(0, 2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_mittags.substring(3, 5)));
                 break;
             case "Abends":
                 time_abends = time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
-                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_abends.substring(0,2)));
-                cal.set(Calendar.MINUTE, Integer.parseInt(time_abends.substring(3,5)));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_abends.substring(0, 2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_abends.substring(3, 5)));
                 break;
             case "Zur Nacht":
                 time_zur_nacht = time_prefs.getString("time_zur_nacht", getResources().getString(R.string.default_zur_nacht));
-                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_zur_nacht.substring(0,2)));
-                cal.set(Calendar.MINUTE, Integer.parseInt(time_zur_nacht.substring(3,5)));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time_zur_nacht.substring(0, 2)));
+                cal.set(Calendar.MINUTE, Integer.parseInt(time_zur_nacht.substring(3, 5)));
                 break;
             default:
 
@@ -511,17 +333,17 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         cal.set(Calendar.MILLISECOND, 0);
 
         //add a day or a week if the cal is in the past right now
-        if(cal.before(Calendar.getInstance())){
-            if(days.equals("Täglich") || days.equals("Taeglich")){
-                cal.add(Calendar.DATE,1);
+        if (cal.before(Calendar.getInstance())) {
+            if (days.equals("Täglich") || days.equals("Taeglich")) {
+                cal.add(Calendar.DATE, 1);
             } else {
-                cal.add(Calendar.DATE,7);
+                cal.add(Calendar.DATE, 7);
             }
 
         }
         //determine the alarm intervalls
         long intervalMillis;
-        if(days.equals("Täglich") || days.equals("Taeglich")){
+        if (days.equals("Täglich") || days.equals("Taeglich")) {
             intervalMillis = 86400000; //daily
         } else {
             intervalMillis = 604800000; //weekly
@@ -534,7 +356,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 PendingIntent.FLAG_UPDATE_CURRENT);
         //set repeating alarm
         AlarmManager mng = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        mng.setRepeating(AlarmManager.RTC_WAKEUP,  cal.getTimeInMillis(), intervalMillis, pi);
+        mng.setRepeating(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), intervalMillis, pi);
     }
 
     private void cancelAlarm(long id) {
@@ -561,7 +383,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         String time_mittags_new = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
         String time_abends_new = time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
         String time_zur_nacht_new = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
-        /*comparison of class olcal time variblaes and new Preferences
+        /*comparison of class local time variblaes with new Preferences
         deletes alarms affected medicines and creates new alarms for them
          */
 
@@ -574,7 +396,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
 
-            for(Meds m: meds){
+            for (Meds m : meds) {
                 if (!m.getDays().equals("")) {
                     createAlarm(m.getDays(), m.getTime(), m.getId());
                 }
@@ -589,7 +411,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
 
-            for(Meds m: meds){
+            for (Meds m : meds) {
                 if (!m.getDays().equals("")) {
                     createAlarm(m.getDays(), m.getTime(), m.getId());
                 }
@@ -603,7 +425,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
 
-            for(Meds m: meds){
+            for (Meds m : meds) {
                 if (!m.getDays().equals("")) {
                     createAlarm(m.getDays(), m.getTime(), m.getId());
                 }
@@ -617,17 +439,201 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
 
-            for(Meds m: meds){
+            for (Meds m : meds) {
                 if (!m.getDays().equals("")) {
                     createAlarm(m.getDays(), m.getTime(), m.getId());
                 }
             }
         }
     }
+
     private void restart() {
         Intent intent = new Intent(this, MedplanActivity.class);
         startActivity(intent);
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
+    private void loadBMP(IntentResult result, AlertDialog.Builder builder) throws JSONException {
+        String medplan_string = result.getContents();
+
+        //check if the result contains a xml Medplan
+        if (medplan_string.contains("<MP")) {
+            //OH GOD PLEASE DON'T TAKE A CLOSER LOOK AT THIS ITS JUST A BAD WORKAROUND TO GET THE BMP MEDPLAN OBJECT TO FIT OUR OBJECT
+            //get Patientname
+            String vorname = medplan_string.substring(medplan_string.indexOf("g=") + 3, medplan_string.indexOf("\" f=\""));
+            String nachname = medplan_string.substring(medplan_string.indexOf("f=") + 3, medplan_string.indexOf("\" b=\""));
+            //get Doctorname
+            String doctor = medplan_string.substring(medplan_string.indexOf("A n=") + 5, medplan_string.indexOf("\" s=\""));
+
+            //replace known mednames since we dont have the db for them
+            //sadly the t specification isnt coming with the data we got as an example so we cant take that as the name <.<
+            //source of PZNs: https://www.arzneimittel-datenbank.de/
+            medplan_string = medplan_string.replace("230272", "METOPROLOLSUCCINAT 1A 95MG");
+            medplan_string = medplan_string.replace("2223945", "RAMIPRIL RATIOPHARM 5MG");
+            medplan_string = medplan_string.replace("558736", "NOVORAPID PENFILL ZYLINAMP");
+            medplan_string = medplan_string.replace("9900751", "SIMVA ARISTO 40MG");
+            medplan_string = medplan_string.replace("2239828", "FENTANYL ABZ 75UG/H");
+            medplan_string = medplan_string.replace("2455874", "LAIF 900 BALANCE");
+
+            //get all medicines
+            StringBuffer workingcopy = new StringBuffer(medplan_string);
+            workingcopy.replace(0, medplan_string.indexOf("<S") - 1, "");
+            String medstring1 = workingcopy.substring(workingcopy.indexOf("<S>"), workingcopy.indexOf("</S>") + 4);
+            //remove first medstring
+            workingcopy.replace(workingcopy.indexOf("<S>"), workingcopy.indexOf("</S>") + 4, "");
+            //remove first medstring <S> tags
+            medstring1 = medstring1.replace("<S>", "");
+            medstring1 = medstring1.replace("</S>", "");
+
+            //get second medstring
+            String medstring2 = workingcopy.toString().substring(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4);
+            //remove second medstring
+            workingcopy = workingcopy.replace(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4, " ");
+            medstring2 = medstring2.replace("<S t=\"zu besonderen Zeiten anzuwendende Medikamente\">", " ");
+            medstring2 = medstring2.replace("</S>", " ");
+
+            //get third medstring
+            String medstring3 = workingcopy.toString().substring(workingcopy.indexOf("\">"), workingcopy.indexOf("</S>") + 4);
+            //remove second medstring
+            workingcopy = workingcopy.replace(workingcopy.indexOf("<S"), workingcopy.indexOf("</S>") + 4, " ");
+            medstring3 = medstring3.replace("\">", " ");
+            medstring3 = medstring3.replace("</S>", " ");
+
+            String meds_bmp = medstring1 + medstring2 + medstring3;
+            //convert the xml med string to j son and to the bmpmeds object
+            Gson g2 = new Gson();
+            bmpmeds meds = g2.fromJson(XML.toJSONObject(meds_bmp).toString(), bmpmeds.class);
+
+            //now its time to get the bmpmeds converted to fit our datamodel
+            ArrayList<Meds> medlist = new ArrayList<>();
+            for (bmpmed m : meds.M) {
+                //check if dosage is part of our enum class
+                String quantity_mod = "";
+                if (m.du.charAt(0) >= 'a' && m.du.charAt(0) <= 'v') {
+                    quantity_mod = enum_dosierung.valueOf(m.du).get_name();
+                } else {
+                    if (m.du.charAt(0) == '#') {
+                        quantity_mod = "Messlöffel";
+                    } else {
+                        //add z infornt so we can get the dosage out of our enum
+                        m.du = "z" + m.du;
+                        quantity_mod = enum_dosierung.valueOf(m.du).get_name();
+                    }
+                }
+                //morgens
+                Meds med_buffer;
+                if (m.m.charAt(0) > '0') {
+                    med_buffer = new Meds();
+                    med_buffer.setName(m.p);
+                    med_buffer.time = "Morgens";
+                    med_buffer.quantity = m.m + quantity_mod;
+                    med_buffer.days = "Täglich";
+                    medlist.add(med_buffer);
+
+                }
+                //abends
+                if (m.v.charAt(0) > '0') {
+                    med_buffer = new Meds();
+                    med_buffer.setName(m.p);
+                    med_buffer.time = "Abends";
+                    med_buffer.quantity = m.v + quantity_mod;
+                    med_buffer.days = "Täglich";
+                    medlist.add(med_buffer);
+
+                }
+                //zur nacht
+                if (m.h.charAt(0) > '0') {
+                    med_buffer = new Meds();
+                    med_buffer.setName(m.p);
+                    med_buffer.time = "Zur Nacht";
+                    med_buffer.quantity = m.h + quantity_mod;
+                    med_buffer.days = "Täglich";
+                    medlist.add(med_buffer);
+
+                }
+                //mittags
+                if (m.d.charAt(0) > '0') {
+                    med_buffer = new Meds();
+                    med_buffer.setName(m.p);
+                    med_buffer.time = "Mittags";
+                    med_buffer.quantity = m.d + quantity_mod;
+                    med_buffer.days = "Täglich";
+                    medlist.add(med_buffer);
+                }
+                //if freeform dosage days is set to something else
+                if (!m.t.equals("")) {
+                    med_buffer = new Meds();
+                    med_buffer.setName(m.p);
+                    med_buffer.setTime("Mittags");
+                    //med_buffer.setDays(m.t);
+                    med_buffer.setQuantity(m.t + " " + quantity_mod);
+                    medlist.add(med_buffer);
+                }
+
+            }
+            if (Meds.listAll(Meds.class).size() > 0) {
+                for (Meds m : Meds.listAll(Meds.class)) {
+                    if (!m.getDays().equals("")) {
+                        cancelAlarm(m.getId());
+                    }
+                }
+            }
+            //save the new meds we got from the datamatrix scan and delete the old ones
+            Meds.deleteAll(Meds.class);
+            //save new meds
+            for (Meds _med : medlist) {
+                _med.save();
+            }
+            for (Meds m : Meds.listAll(Meds.class)) {
+                if (!m.getDays().equals("")) {
+                    createAlarm(m.getDays(), m.getTime(), m.getId());
+                }
+            }
+            //set misc info
+            Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
+
+            if (check == null) {
+                Log.e("CHECK", "no empty object was found somethign must have went wrong(quite badly lol)");
+            } else {
+                check.setDoctor(doctor);
+                check.setMedcount(medlist.size());
+                check.setPatient(vorname + " " + nachname);
+                check.save();
+            }
+
+
+        } else {
+
+
+            Gson g = new Gson();
+            MedPlan medplan = g.fromJson(medplan_string, MedPlan.class);
+            tvarzt.setText("Austellender Arzt: " + medplan.doctor);
+            tvpatient.setText("Ausgestellt für: " + medplan.patient);
+
+            List<Meds> medlist = medplan.meds;
+            MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
+            listView.setAdapter(adapter);
+            builder.setMessage("Medikationsplan erfasst");
+
+            //save meds from qrcode scan
+            Meds.deleteAll(Meds.class);
+            //save new meds
+            for (Meds _med : medlist) {
+                _med.save();
+            }
+            //set misc info
+            Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
+
+            if (check == null) {
+                Log.e("CHECK", "no empty object was found. Something must have went wrong(quite badly lol)");
+            } else {
+                check.setDoctor(medplan.getDoctor());
+                check.setMedcount(medplan.getMedcount());
+                check.setPatient(medplan.getPatient());
+                check.save();
+            }
+        }
+
     }
 
 }

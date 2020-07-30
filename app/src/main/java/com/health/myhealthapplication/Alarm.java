@@ -31,7 +31,7 @@ public class Alarm extends BroadcastReceiver {
 
         createSimpleNotification(context, extras.getLong("med_id"));
         Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-// Vibrate for 3000 milliseconds
+// Vibrate for 1500 milliseconds
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             v.vibrate(VibrationEffect.createOneShot(1500, VibrationEffect.DEFAULT_AMPLITUDE));
         } else {
