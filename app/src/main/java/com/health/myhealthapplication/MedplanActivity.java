@@ -39,7 +39,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /**
  * MedplanActivity shows the for the patient relevant information of the currently loaded "Medikationsplan".
@@ -62,7 +61,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
     String time_mittags;
     String time_abends;
     String time_zur_nacht;
-    private static final String ALPHA_NUMERIC_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,25 +82,12 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
         //add back button to navigation bar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        SharedPreferences pref = getSharedPreferences("user_key", MODE_PRIVATE);
-        SharedPreferences.Editor ed = pref.edit();
-        if (pref.getString("user_key", null) == null) {
-            StringBuilder sb = new StringBuilder();
-            //small algorithm
-            Random rd = new Random();
-            for (int it = 0; it < 20; it++) {
-                sb.append(ALPHA_NUMERIC_STRING.charAt((int) (rd.nextFloat() * ALPHA_NUMERIC_STRING.length())));
-            }
-            ed.putString("user_key", sb.toString());
-
-            ed.commit();
-        }
 
         //get persisted medplan if it exists
         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
         if (check != null) {
-            tvarzt.setText("Austellender Arzt: " + check.getDoctor());
-            tvpatient.setText("Ausgestellt für: " + check.getPatient());
+            tvarzt.setText("Austellender Arzt: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getDoctor());
+            tvpatient.setText("Ausgestellt für: " + Medplaninfo.findById(Medplaninfo.class, (long) 1).getPatient());
 
             List<Meds> medlist = Meds.listAll(Meds.class);
             MedicineListAdapter adapter = new MedicineListAdapter(getApplicationContext(), R.layout.adapter_view_layout, medlist);
@@ -187,7 +172,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
 
                     //check if the result contains xml stuff
                     if (medplan_string.contains("<MP")) {
-                        //OH GOD PLEASE DON'T TAKE A CLOSER LOOK AT THIS ITS JUST A BAD WORKAROUND TO GET THE BMP MEDPLAN OBJECT TO FIT OUR OBJECT
+                        //OH GOD PLEASE DON'T TAKE A CLOSER LOOK AT THIS ITS JUST A BAD WORKAROUND TO GET BMP MEDPLAN OBJECT TO FIT OUR OBJECT
                         //get Patientname
                         String vorname = medplan_string.substring(medplan_string.indexOf("g=") + 3, medplan_string.indexOf("\" f=\""));
                         String nachname = medplan_string.substring(medplan_string.indexOf("f=") + 3, medplan_string.indexOf("\" b=\""));
@@ -428,7 +413,11 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                         MedicineListAdapter adapter = new MedicineListAdapter(context, R.layout.adapter_view_layout, medlist);
                         listView.setAdapter(adapter);
 
-
+                        for(Meds m: Meds.listAll(Meds.class)){
+                            if (!m.getDays().equals("")) {
+                                createAlarm(m.getDays(), m.getTime(), m.getId());
+                            }
+                        }
                         //doing some databse stuff
                         //remember record indexes start with 1
                         Medplaninfo check = Medplaninfo.findById(Medplaninfo.class, (long) 1);
@@ -444,9 +433,6 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
                             //save new meds
                             for (Meds _med : medplan.meds) {
                                 _med.save();
-                                if (!_med.getDays().equals("")) {
-                                    createAlarm(_med.getDays(), _med.getTime(), _med.getId());
-                                }
                             }
                             check.save();
                         }
@@ -544,7 +530,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         Intent intent = new Intent(this, Alarm.class);
         intent.putExtra("med_id", id);
 //PendingIntent uses the id as the request code
-        PendingIntent pi = PendingIntent.getBroadcast(this, (int)id, intent,
+        PendingIntent pi = PendingIntent.getBroadcast(this, (int) id, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         //set repeating alarm
         AlarmManager mng = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -574,7 +560,7 @@ public class MedplanActivity extends AppCompatActivity implements View.OnClickLi
         String time_morgens_new = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
         String time_mittags_new = time_prefs.getString("time_mittags", getResources().getString(R.string.default_mittags));
         String time_abends_new = time_prefs.getString("time_abends", getResources().getString(R.string.default_abends));
-        String time_zur_nacht_new = time_prefs.getString("time_zur_nacht", getResources().getString(R.string.default_morgens));
+        String time_zur_nacht_new = time_prefs.getString("time_morgens", getResources().getString(R.string.default_morgens));
         /*comparison of class olcal time variblaes and new Preferences
         deletes alarms affected medicines and creates new alarms for them
          */
